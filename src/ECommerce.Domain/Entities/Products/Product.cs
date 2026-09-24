@@ -1,19 +1,20 @@
-namespace ECommerce.Domain.Entities.Product
+using ECommerce.Domain.Entities.Categories;
+namespace ECommerce.Domain.Entities.Products
 {
     public class Product
     {
         private Product()
         {
-            
+
         }
 
-        private Product(string name,string description,decimal price,int stockQuantity,int categoryId)
+        private Product(string name, string description, decimal price, int stockQuantity, int categoryId)
         {
             ValidateName(name);
             ValidatePrice(price);
             ValidateStock(stockQuantity);
             ValidateCatrgory(categoryId);
-             Name = name.Trim();
+            Name = name.Trim();
             Description = string.IsNullOrWhiteSpace(description)
             ? null
             : description.Trim();
@@ -27,29 +28,30 @@ namespace ECommerce.Domain.Entities.Product
             UpdatedAt = DateTime.UtcNow;
         }
 
-        public int  Id { get; set; }
+        public int Id { get; set; }
         public string Name { get; private set; } = null!;
         public string? Description { get; private set; }
         public decimal Price { get; private set; }
-        public int  StockQuantity { get; private set; }
+        public int StockQuantity { get; private set; }
         public int CategoryId { get; private set; }
+        public Category Category { get; private set; } = null!;
         public bool IsActive { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
 
         //
-        public static Product Create(string name,string? description, decimal price,int stockQuantity,int categoryId)
+        public static Product Create(string name, string? description, decimal price, int stockQuantity, int categoryId)
         {
             return new Product(name, description, price, stockQuantity, categoryId);
         }
-         private void ValidateName(string name)
-         {
-             if (string.IsNullOrWhiteSpace(name))
-                 throw new ArgumentException("Product name is required.",nameof(name));
-             if (name.Trim().Length > 100)
-                 throw new ArgumentException("Product name cannot exceed 100 characters",nameof(name));
-         }
-         private void ValidateCatrgory(int categoryId)
+        private void ValidateName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Product name is required.", nameof(name));
+            if (name.Trim().Length > 100)
+                throw new ArgumentException("Product name cannot exceed 100 characters", nameof(name));
+        }
+        private void ValidateCatrgory(int categoryId)
         {
             if (categoryId < 0)
             {
