@@ -8,8 +8,8 @@ namespace ECommerce.Domain.Entities.Customers
         }
         public Customer(string firstName,string lastName,string email)
         {
-            ValidateName(firstName);
-            ValidateName(lastName);
+            ValidateName(firstName,nameof(firstName));
+            ValidateName(lastName,nameof(lastName));
             ValidateEmail(email);
             IsActive = true;
             CreateAt = DateTime.UtcNow;

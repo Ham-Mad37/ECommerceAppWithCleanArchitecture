@@ -30,7 +30,7 @@ namespace ECommerce.Domain.Entities.Products
 
         public int Id { get; set; }
         public string Name { get; private set; } = null!;
-        public string? Description { get; private set; }
+        public string? Description { get; private set; } 
         public decimal Price { get; private set; }
         public int StockQuantity { get; private set; }
         public int CategoryId { get; private set; }
