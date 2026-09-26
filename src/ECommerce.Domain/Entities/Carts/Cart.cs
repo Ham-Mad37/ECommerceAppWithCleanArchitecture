@@ -1,4 +1,4 @@
-namespace ECommerce.Domain.Entities.Categories
+namespace ECommerce.Domain.Entities.Cart
 {
     public class Cart
     {
@@ -13,12 +13,12 @@ namespace ECommerce.Domain.Entities.Categories
                 throw new ArgumentException("Customer Id must be grater than zero.", nameof(customerId));
             CustomerId = customerId;
             CreatedAt = DateTime.UtcNow;
-            UpdateAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
         }
         public int Id { get; private set; }
         public int CustomerId { get; private set; }
         public DateTime CreatedAt { get; private set; }
-        public DateTime UpdateAt { get; private set; }
+        public DateTime UpdatedAt { get; private set; }
         public IReadOnlyCollection<CartItem> Items => _items.AsReadOnly();
 
         //
@@ -41,7 +41,7 @@ namespace ECommerce.Domain.Entities.Categories
             {
                 _items.Add(CartItem.Create(productId, quantity));
             }
-            UpdateAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
         }
         public void UpdateQuantity(int productId, int quantity)
         {
@@ -49,7 +49,7 @@ namespace ECommerce.Domain.Entities.Categories
             if (item is null)
                 throw new ArgumentException("Product dose not exist in cart");
             item.SetQuantity(quantity);
-            UpdateAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
         }
         public void RemoveItem(int productId)
         {
@@ -57,12 +57,12 @@ namespace ECommerce.Domain.Entities.Categories
             if (item is null)
                 return;
             _items.Remove(item);
-            UpdateAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
         }
         public void Clear()
         {
             _items.Clear();
-            UpdateAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
         }
     }
 }

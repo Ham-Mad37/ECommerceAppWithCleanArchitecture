@@ -12,16 +12,16 @@ namespace ECommerce.Domain.Entities.Customers
             ValidateName(lastName,nameof(lastName));
             ValidateEmail(email);
             IsActive = true;
-            CreateAt = DateTime.UtcNow;
-            UpdateAt = DateTime.UtcNow;
+            CreatedAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
         }
         public int Id { get; set; }
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
         public string Email { get; set; } = null!;
         public bool IsActive { get; set; }
-        public DateTime CreateAt { get; set; }
-        public DateTime UpdateAt { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
         //
         public static Customer Create(string firstName, string lastName, string email)
         {
@@ -34,7 +34,7 @@ namespace ECommerce.Domain.Entities.Customers
 
             FirstName = firstName.Trim();
             LastName = lastName.Trim();
-            UpdateAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
 
         }
         private void ValidateEmail(string email)
@@ -56,12 +56,12 @@ namespace ECommerce.Domain.Entities.Customers
         public void Activate()
         {
             IsActive = true;
-            UpdateAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
         }
         public void Desactivate()
         {
             IsActive = false;
-            UpdateAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
         }
 
     }

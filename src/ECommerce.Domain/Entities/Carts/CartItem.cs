@@ -1,4 +1,4 @@
-namespace ECommerce.Domain.Entities.Categories
+namespace ECommerce.Domain.Entities.Cart
 {
     public class CartItem
     {
