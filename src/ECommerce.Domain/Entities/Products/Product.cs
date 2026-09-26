@@ -51,6 +51,13 @@ namespace ECommerce.Domain.Entities.Products
             if (name.Trim().Length > 100)
                 throw new ArgumentException("Product name cannot exceed 100 characters", nameof(name));
         }
+        private static void ValidateDescription(string? description)
+        {
+            if(description is not null && description.Trim().Length>1000 )
+            {
+                throw new ArgumentException("Product description cannot exceed 1000 characters.", nameof(description));
+            }
+        }
         private void ValidateCatrgory(int categoryId)
         {
             if (categoryId < 0)
