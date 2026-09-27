@@ -44,6 +44,25 @@ namespace ECommerce.Domain.Entities.Products
         {
             return new Product(name, description, price, stockQuantity, categoryId);
         }
+        public void UpdateDetails(string name, string? description, int categoryId)
+        {
+            ValidateName(name);
+            ValidateDescription(description);
+            ValidateCatrgory(categoryId);
+
+            Name = name.Trim();
+
+            description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+            CategoryId = categoryId;
+            UpdatedAt = DateTime.UtcNow;
+
+        }
+        public void SetStockQuantity(int quantity)
+        {
+            ValidateStock(quantity);
+            StockQuantity = quantity;
+            UpdatedAt = DateTime.UtcNow;
+        }
         private void ValidateName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -106,7 +125,7 @@ namespace ECommerce.Domain.Entities.Products
         }
         public void Activate()
         {
-            IsActive = true;
+            IsActive =  true;
             UpdatedAt = DateTime.UtcNow;
         }
 
