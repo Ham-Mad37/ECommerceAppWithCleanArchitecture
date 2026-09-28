@@ -1,3 +1,4 @@
+using ECommerce.Application.Common.Exceptions;
 using ECommerce.Application.Common.Interfaces;
 using MediatR;
 
@@ -17,7 +18,7 @@ namespace ECommerce.Application.Features.Products.Commands.DeactivateProduct
             var product = await _productRepository.GetByIdAsync(request.id,cancellationToken);
             if (product is null)
             {
-                throw new KeyNotFoundException($"Product with ID{request.id} was notfound. ");
+                throw new NotFoundException($"Product with ID{request.id} was notfound. ");
             }
             product.Deactivate();
             await _unitOfWork.SaveChangesAsync(cancellationToken);

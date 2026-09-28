@@ -1,16 +1,30 @@
-using Microsoft.Extensions.Configuration;
+using AutoMapper;
+using ECommerce.Application.Common.Behaviors;
+using FluentValidation;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-namespace ECommerce.Application
+
+namespace ECommerce.Application;
+
+public static class DependencyInjection
 {
-    public static class DependencyInjection
+    public static IServiceCollection AddApplication(
+        this IServiceCollection services)
     {
-        public static IServiceCollection AddApplication(this IServiceCollection services)
+        var assembly = typeof(DependencyInjection).Assembly;
+
+        services.AddMediatR(cfg =>
         {
-            services.AddMediatR(cfg =>
-            {
-                cfg.RegisterServicesFromAssemblies(typeof(DependencyInjection).Assembly);
-            });
-            return services;
-        }
+            cfg.RegisterServicesFromAssembly(assembly);
+
+            cfg.AddOpenBehavior(
+                typeof(ValidationBehavior<,>));
+        });
+
+        services.AddAutoMapper(assembly);
+
+        services.AddValidatorsFromAssembly(assembly);
+
+        return services;
     }
 }

@@ -1,3 +1,4 @@
+using ECommerce.Application.Common.Exceptions;
 using ECommerce.Application.Common.Features.Products.Command.UpdateProduct;
 using ECommerce.Application.Common.Interfaces;
 using MediatR;
@@ -19,7 +20,7 @@ namespace ECommerce.Application.Features.Products.Commands.UpdateProduct
             var product = await _productRepository.GetByIdAsync(request.id, cancellationToken);
             if (product is null)
             {
-                throw new KeyNotFoundException($"Product with this ID{request.id} was not found. ");
+                throw new NotFoundException($"Product with this ID{request.id} was not found. ");
             }
             
             product.UpdateDetails(request.name, request.description, request.categoryId);
