@@ -1,4 +1,6 @@
+using ECommerce.Application.Common.Interfaces;
 using ECommerce.Infrastructure.Data;
+using ECommerce.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +15,10 @@ namespace ECommerce.Infrastructure
             {
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             });
+            services.AddScoped<IProductRepository, ProductRepositories>();
+            services.AddScoped<IUnitOfWork>(
+                provider => provider.GetRequiredService<AppDbContext>()
+            );
             return services;
         }
     }

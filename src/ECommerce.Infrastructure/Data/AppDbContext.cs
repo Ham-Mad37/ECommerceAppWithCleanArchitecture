@@ -4,9 +4,10 @@ using ECommerce.Domain.Entities.Categories;
 using ECommerce.Domain.Entities.Cart;
 using ECommerce.Domain.Entities.Customers;
 using ECommerce.Domain.Entities.Orders;
+using ECommerce.Application.Common.Interfaces;
 namespace ECommerce.Infrastructure.Data
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : DbContext,IUnitOfWork
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
