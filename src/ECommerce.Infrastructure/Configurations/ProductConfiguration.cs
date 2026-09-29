@@ -21,7 +21,7 @@ namespace ECommerce.Infrastructure.Configurations
             .HasMaxLength(1000);
 
             builder.Property(x => x.Price)
-            .HasPrecision(2, 18);
+            .HasPrecision(18, 2);
 
             builder.Property(x => x.StockQuantity)
            .IsRequired();
@@ -36,7 +36,7 @@ namespace ECommerce.Infrastructure.Configurations
                 .IsRequired();
             builder.HasIndex(x => x.CategoryId);
 
-            builder.HasOne<Category>()
+            builder.HasOne(x=>x.Category)
             .WithMany()
             .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);

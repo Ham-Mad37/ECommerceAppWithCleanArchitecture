@@ -20,8 +20,10 @@ public static class DependencyInjection
             cfg.AddOpenBehavior(
                 typeof(ValidationBehavior<,>));
         });
-
-        services.AddAutoMapper(assembly);
+        services.AddAutoMapper(cfg =>
+        {
+            
+        }, assembly);
 
         services.AddValidatorsFromAssembly(assembly);
 

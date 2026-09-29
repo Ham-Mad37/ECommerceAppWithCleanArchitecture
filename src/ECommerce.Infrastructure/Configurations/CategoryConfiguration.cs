@@ -27,6 +27,89 @@ namespace ECommerce.Infrastructure.Configurations
 
             builder.HasIndex(x => x.Name)
             .IsUnique();
+
+            builder.HasData(
+           new
+           {
+               Id = 1,
+               Name = "Smartphones",
+               IsActive = true,
+               CreatedAt = new DateTime(2026, 1, 1),
+               UpdatedAt = new DateTime(2026, 1, 1)
+           },
+           new
+           {
+               Id = 2,
+               Name = "Laptops",
+               IsActive = true,
+               CreatedAt = new DateTime(2026, 1, 1),
+               UpdatedAt = new DateTime(2026, 1, 1)
+           },
+           new
+           {
+               Id = 3,
+               Name = "Tablets",
+               IsActive = true,
+               CreatedAt = new DateTime(2026, 1, 1),
+               UpdatedAt = new DateTime(2026, 1, 1)
+           },
+           new
+           {
+               Id = 4,
+               Name = "Headphones",
+               IsActive = true,
+               CreatedAt = new DateTime(2026, 1, 1),
+               UpdatedAt = new DateTime(2026, 1, 1)
+           },
+           new
+           {
+               Id = 5,
+               Name = "Monitors",
+               IsActive = true,
+               CreatedAt = new DateTime(2026, 1, 1),
+               UpdatedAt = new DateTime(2026, 1, 1)
+           },
+           new
+           {
+               Id = 6,
+               Name = "Keyboards",
+               IsActive = true,
+               CreatedAt = new DateTime(2026, 1, 1),
+               UpdatedAt = new DateTime(2026, 1, 1)
+           },
+           new
+           {
+               Id = 7,
+               Name = "Mice",
+               IsActive = true,
+               CreatedAt = new DateTime(2026, 1, 1),
+               UpdatedAt = new DateTime(2026, 1, 1)
+           },
+           new
+           {
+               Id = 8,
+               Name = "Cameras",
+               IsActive = true,
+               CreatedAt = new DateTime(2026, 1, 1),
+               UpdatedAt = new DateTime(2026, 1, 1)
+           },
+           new
+           {
+               Id = 9,
+               Name = "Gaming",
+               IsActive = true,
+               CreatedAt = new DateTime(2026, 1, 1),
+               UpdatedAt = new DateTime(2026, 1, 1)
+           },
+           new
+           {
+               Id = 10,
+               Name = "Accessories",
+               IsActive = true,
+               CreatedAt = new DateTime(2026, 1, 1),
+               UpdatedAt = new DateTime(2026, 1, 1)
+           }
+       );
         }
     }
 }

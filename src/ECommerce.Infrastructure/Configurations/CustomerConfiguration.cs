@@ -22,7 +22,7 @@ namespace ECommerce.Infrastructure.Configurations
 
             builder.Property(x => x.Email)
             .IsRequired()
-            .HasMaxLength(250);
+            .HasMaxLength(255);
 
             builder.Property(x => x.IsActive)
            .IsRequired();

@@ -1,5 +1,6 @@
 using AutoMapper;
 using ECommerce.Application.Common.Interfaces;
+using ECommerce.Application.Common.Models;
 using ECommerce.Application.Common.Modles;
 using ECommerce.Application.Features.Products.DTOs;
 using MediatR;
@@ -17,11 +18,25 @@ namespace ECommerce.Application.Features.Products.Queries.GetProducts
         }
         public async Task<PagedResult<ProductListDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
         {
-            var products = await _productRepository.GetPagedAsync(request.pageNumber, request.pageSize, cancellationToken);
-            var totalCount = await _productRepository.GetCountAsync(cancellationToken);
+            var filter = new ProductFilter(
+                request.Search,
+                request.CategoryId,
+                request.IsActive,
+                request.SortBy,
+                request.SortDirection
+            );
 
-            var items = _mapper.Map<IReadOnlyCollection<ProductListDto>>(products);
+            var products = await _productRepository.GetPagedAsync(
+                filter,
+                request.pageNumber,
+                request.pageSize,
+                cancellationToken);
 
+            var totalCount = await _productRepository.GetCountAsync(
+                filter,
+                cancellationToken);
+            var items = _mapper.Map<IReadOnlyCollection<ProductListDto>>(
+                products);
             return new PagedResult<ProductListDto>(
                 items,
                 request.pageNumber,

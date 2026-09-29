@@ -17,16 +17,16 @@ namespace ECommerce.Infrastructure.Configurations
             .IsRequired();
 
             builder.Property(x => x.SubTotal)
-            .HasPrecision(2, 18);
+            .HasPrecision(18, 2);
 
             builder.Property(x => x.Discount)
-            .HasPrecision(2, 18);
+            .HasPrecision(18, 2);
 
             builder.Property(x => x.ShippingCost)
-            .HasPrecision(2, 18);
+            .HasPrecision(18, 2);
 
             builder.Property(x => x.Total)
-            .HasPrecision(2, 18);
+            .HasPrecision(18, 2);
 
             builder.Property(x => x.CreatedAt)
             .IsRequired();

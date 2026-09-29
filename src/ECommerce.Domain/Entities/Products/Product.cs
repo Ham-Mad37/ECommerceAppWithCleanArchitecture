@@ -5,9 +5,7 @@ namespace ECommerce.Domain.Entities.Products
     {
         private Product()
         {
-
         }
-
         private Product(string name, string description, decimal price, int stockQuantity, int categoryId)
         {
             ValidateName(name);

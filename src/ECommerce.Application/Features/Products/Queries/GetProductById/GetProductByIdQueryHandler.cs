@@ -17,7 +17,7 @@ namespace ECommerce.Application.Features.Products.Queries.GetProductById
         public async Task<ProductDto?> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
         {
             var product = await _productRepository.GetByIdAsync(request.id);
-            if (product is not null)
+            if (product is null)
                 return null;
             return _mapper.Map<ProductDto>(product);
         }

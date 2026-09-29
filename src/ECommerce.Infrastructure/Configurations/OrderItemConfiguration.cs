@@ -18,7 +18,7 @@ namespace ECommerce.Infrastructure.Configurations
             .HasMaxLength(100);
 
             builder.Property(x => x.UnitPrice)
-            .HasPrecision(2, 18);
+            .HasPrecision(18, 2);
 
             builder.Property(x => x.Quantity)
             .IsRequired();
