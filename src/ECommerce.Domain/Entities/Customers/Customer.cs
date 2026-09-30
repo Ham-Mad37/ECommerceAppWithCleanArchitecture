@@ -11,6 +11,9 @@ namespace ECommerce.Domain.Entities.Customers
             ValidateName(firstName,nameof(firstName));
             ValidateName(lastName,nameof(lastName));
             ValidateEmail(email);
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
             IsActive = true;
             CreatedAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;
@@ -44,7 +47,6 @@ namespace ECommerce.Domain.Entities.Customers
             if (!email.Contains('@'))
                 throw new ArgumentException("Invalid email address.");
         }
-
         private void ValidateName(string name, string parameterName)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -52,13 +54,12 @@ namespace ECommerce.Domain.Entities.Customers
             if (name.Trim().Length > 100)
                 throw new ArgumentException("Name cannot exceed 100 characters.", nameof(parameterName));
         }
-
         public void Activate()
         {
             IsActive = true;
             UpdatedAt = DateTime.UtcNow;
         }
-        public void Desactivate()
+        public void Deactivate()
         {
             IsActive = false;
             UpdatedAt = DateTime.UtcNow;

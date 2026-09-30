@@ -17,6 +17,7 @@ namespace ECommerce.Infrastructure
             });
             services.AddScoped<IProductRepository, ProductRepositories>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<ICustomerRepository, CustomerRepository>();
             services.AddScoped<IUnitOfWork>(
                 provider => provider.GetRequiredService<AppDbContext>()
             );
