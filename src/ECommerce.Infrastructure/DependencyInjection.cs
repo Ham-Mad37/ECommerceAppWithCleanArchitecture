@@ -16,6 +16,7 @@ namespace ECommerce.Infrastructure
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             });
             services.AddScoped<IProductRepository, ProductRepositories>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IUnitOfWork>(
                 provider => provider.GetRequiredService<AppDbContext>()
             );

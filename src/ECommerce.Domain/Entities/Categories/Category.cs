@@ -39,12 +39,12 @@ namespace ECommerce.Domain.Entities.Categories
             Name = name.Trim();
             UpdatedAt = DateTime.UtcNow;
         }
-        public void Active()
+        public void Activate()
         {
             IsActive = true;
             UpdatedAt = DateTime.UtcNow;
         }
-        public void Desactive()
+        public void Deactivate()
         {
             IsActive = false;
             UpdatedAt = DateTime.UtcNow;
