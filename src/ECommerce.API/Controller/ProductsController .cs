@@ -1,4 +1,4 @@
-
+using ECommerce.Application.Common.Constants;
 using ECommerce.Application.Common.Features.Products.Command.UpdateProduct;
 using ECommerce.Application.Features.Products.Commands.ActivateProduct;
 using ECommerce.Application.Features.Products.Commands.CreateProduct;
@@ -6,10 +6,12 @@ using ECommerce.Application.Features.Products.Commands.DeactivateProduct;
 using ECommerce.Application.Features.Products.Queries.GetProductById;
 using ECommerce.Application.Features.Products.Queries.GetProducts;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Controller
 {
+    [Authorize]
     [ApiController]
     [Route("Api/[controller]")]
     public sealed class ProductsController : ControllerBase
@@ -37,6 +39,7 @@ namespace ECommerce.API.Controller
             return Ok(result);
         }
         //Post: api/Products
+        [Authorize(Roles = Roles.Admin)]
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductCommand command, CancellationToken cancellationToken)
         {

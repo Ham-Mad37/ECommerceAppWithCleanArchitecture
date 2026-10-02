@@ -1,6 +1,8 @@
 using ECommerce.Application.Common.Interfaces;
 using ECommerce.Infrastructure.Data;
+using ECommerce.Infrastructure.Identity.Jwt;
 using ECommerce.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,9 +20,28 @@ namespace ECommerce.Infrastructure
             services.AddScoped<IProductRepository, ProductRepositories>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ICustomerRepository, CustomerRepository>();
-            services.AddScoped<IUnitOfWork>(
-                provider => provider.GetRequiredService<AppDbContext>()
-            );
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AppDbContext>());
+            services
+            .AddIdentity<ApplicationUser, IdentityRole>(options =>
+            {
+                options.User.RequireUniqueEmail = true;
+
+                options.Password.RequiredLength = 8;
+                options.Password.RequireDigit = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireNonAlphanumeric = true;
+            })
+            .AddEntityFrameworkStores<AppDbContext>();
+
+            services.Configure<JwtSettings>(
+            configuration.GetSection("Jwt"));
+
+            services.AddScoped<
+                IJwtTokenService,
+                JwtTokenService>();
+
             return services;
         }
     }

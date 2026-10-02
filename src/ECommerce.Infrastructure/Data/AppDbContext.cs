@@ -5,9 +5,10 @@ using ECommerce.Domain.Entities.Cart;
 using ECommerce.Domain.Entities.Customers;
 using ECommerce.Domain.Entities.Orders;
 using ECommerce.Application.Common.Interfaces;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 namespace ECommerce.Infrastructure.Data
 {
-    public class AppDbContext : DbContext,IUnitOfWork
+    public class AppDbContext : IdentityDbContext<ApplicationUser>, IUnitOfWork
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -24,6 +25,7 @@ namespace ECommerce.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         }
         
