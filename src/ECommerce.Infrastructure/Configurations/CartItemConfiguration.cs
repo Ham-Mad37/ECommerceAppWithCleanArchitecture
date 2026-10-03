@@ -20,7 +20,7 @@ namespace ECommerce.Infrastructure.Configurations
             builder.HasIndex(x => new { x.CartId, x.ProductId })
             .IsUnique();
 
-            builder.HasOne<Product>()
+            builder.HasOne(x=>x.Product)
             .WithMany()
             .HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.Restrict);

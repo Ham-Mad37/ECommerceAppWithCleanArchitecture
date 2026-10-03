@@ -32,7 +32,8 @@ namespace ECommerce.Infrastructure.Configurations
             .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(x => x.Items)
-            .WithOne()
+            .WithOne(x=>x.Cart)
+            .HasForeignKey(x=>x.CartId)
             .OnDelete(DeleteBehavior.Cascade);
             
         }

@@ -1,3 +1,5 @@
+using ECommerce.Domain.Entities.Products;
+
 namespace ECommerce.Domain.Entities.Cart
 {
     public class CartItem
@@ -17,10 +19,13 @@ namespace ECommerce.Domain.Entities.Cart
 
         public int Id { get; private set; }
         public int CartId { get; private set; }
+        public Cart Cart { get; private set; } = null!;
         public int ProductId { get; private set; }
+        public Product Product { get; private set; } = null!;
         public int Quantity { get; private set; }
+       
         //
-        
+
         public static CartItem Create(int productId, int quantity)
         {
             return new CartItem(productId, quantity);

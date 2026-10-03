@@ -21,6 +21,8 @@ namespace ECommerce.Infrastructure
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ICustomerRepository, CustomerRepository>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<IJwtTokenService, JwtTokenService>();
+            services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AppDbContext>());
             services
             .AddIdentity<ApplicationUser, IdentityRole>(options =>
