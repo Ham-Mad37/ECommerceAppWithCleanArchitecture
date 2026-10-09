@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using ECommerce.Domain.Common.Exceptions;
+using ECommerce.Domain.Entities.Customers;
 
 namespace ECommerce.Domain.Entities.Orders
 {
@@ -27,6 +29,7 @@ namespace ECommerce.Domain.Entities.Orders
         
         public int Id { get; private set; }
         public int CustomerId { get; private set; }
+        public Customer Customer { get; private set; }
         public OrderStatus Status { get; private set; }
         public decimal SubTotal { get; private set; }
         public decimal ShippingCost { get; private set; }
@@ -50,7 +53,7 @@ namespace ECommerce.Domain.Entities.Orders
        }
         private void RecalculateTotals()
         {
-            SubTotal = _items.Sum(x => x.LineTotl);
+            SubTotal = _items.Sum(x => x.LineTotal);
             Total = SubTotal + ShippingCost - Discount;
             UpdatedAt = DateTime.UtcNow;
         }
@@ -81,14 +84,14 @@ namespace ECommerce.Domain.Entities.Orders
         public void Confirm()
         {
             if (Status != OrderStatus.Pending)
-                throw new InvalidOperationException("Only pending orders can be confirmed.");
+                throw new DomainException("Only pending orders can be confirmed.");
             Status = OrderStatus.Confirmed;
             UpdatedAt = DateTime.UtcNow;
         }
         public void StartProcessing()
         {
             if (Status != OrderStatus.Confirmed)
-                throw new InvalidOperationException(
+                throw new DomainException(
                     "Only confirmed orders can start processing.");
 
             Status = OrderStatus.Processing;
@@ -97,7 +100,7 @@ namespace ECommerce.Domain.Entities.Orders
         public void Ship()
         {
             if (Status != OrderStatus.Processing)
-                throw new InvalidOperationException(
+                throw new DomainException(
                     "Only processing orders can be shipped.");
 
             Status = OrderStatus.Shipped;
@@ -106,7 +109,7 @@ namespace ECommerce.Domain.Entities.Orders
         public void Deliver()
         {
             if (Status != OrderStatus.Shipped)
-                throw new InvalidOperationException(
+                throw new DomainException(
                     "Only shipped orders can be delivered.");
 
             Status = OrderStatus.Delivered;
@@ -115,11 +118,11 @@ namespace ECommerce.Domain.Entities.Orders
         public void Cancel()
         {
             if (Status == OrderStatus.Delivered)
-                throw new InvalidOperationException(
+                throw new DomainException(
                     "Delivered orders cannot be cancelled.");
 
             if (Status == OrderStatus.Cancelled)
-                throw new InvalidOperationException(
+                throw new DomainException(
                     "Order is already cancelled.");
 
             Status = OrderStatus.Cancelled;

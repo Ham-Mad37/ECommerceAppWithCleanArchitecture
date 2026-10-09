@@ -24,6 +24,11 @@ namespace ECommerce.Infrastructure.Repositories
             return product;
         }
 
+        public Task<Product?> GetByIdForUpdateAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return _context.Products.FirstOrDefaultAsync(x => x.Id == id,cancellationToken);
+        }
+
         public async Task<int> GetCountAsync( ProductFilter filter,CancellationToken cancellationToken = default)
         {
             IQueryable<Product> query = _context.Products;

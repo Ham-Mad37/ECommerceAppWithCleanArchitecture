@@ -1,6 +1,7 @@
 using ECommerce.Application.Common.Constants;
 using ECommerce.Application.Common.Features.Products.Command.UpdateProduct;
 using ECommerce.Application.Features.Products.Commands.ActivateProduct;
+using ECommerce.Application.Features.Products.Commands.AdjustProductStock;
 using ECommerce.Application.Features.Products.Commands.CreateProduct;
 using ECommerce.Application.Features.Products.Commands.DeactivateProduct;
 using ECommerce.Application.Features.Products.Queries.GetProductById;
@@ -79,6 +80,20 @@ namespace ECommerce.API.Controller
 
             return NoContent();
         }
-        
+
+        //Product
+        [Authorize(Roles = Roles.Admin)]
+        [HttpPatch("{productId:int}/stock")]
+        public async Task<IActionResult> AdjustProductStock(int productId,
+            [FromBody] AdjustProductStockCommand request,
+            CancellationToken cancellationToken)
+        {
+            var command = new AdjustProductStockCommand(productId, request.Quantity);
+
+            await _mediator.Send(command, cancellationToken);
+
+            return NoContent();
+        }
+
     }
 }

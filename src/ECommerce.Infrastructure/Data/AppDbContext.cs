@@ -21,6 +21,25 @@ namespace ECommerce.Infrastructure.Data
         public DbSet<CartItem> CartItems => Set<CartItem>();
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+
+        public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
+        {
+            await using var transaction =
+            await Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                await action();
+
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+        }
+
         //
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

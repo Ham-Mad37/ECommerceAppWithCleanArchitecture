@@ -30,7 +30,7 @@ namespace ECommerce.Infrastructure.Configurations
             .HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Ignore(x => x.LineTotl);
+            builder.Ignore(x => x.LineTotal);
         }
     }
 }

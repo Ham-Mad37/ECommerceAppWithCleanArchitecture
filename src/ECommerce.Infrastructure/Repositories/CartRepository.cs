@@ -19,7 +19,8 @@ public sealed class CartRepository : ICartRepository
 
     public async Task<Cart?> GetCartByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default)
     {
-        return await _context.Carts.Include(x=>x.Items)
+        return await _context.Carts
+        .Include(x=>x.Items)
         .ThenInclude(x=>x.Product)
         .FirstOrDefaultAsync(x => x.CustomerId == customerId, cancellationToken);
     }

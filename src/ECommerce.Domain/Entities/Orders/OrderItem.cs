@@ -16,6 +16,11 @@ namespace ECommerce.Domain.Entities.Orders
                 throw new ArgumentException("Unit price cannot be negative.", nameof(unitPrice));
             if (quantity <= 0)
                 throw new ArgumentException("Quantity must be grater than zero.", nameof(quantity));
+           
+            ProductId = productId;
+            ProductName = productName;
+            UnitPrice = unitPrice;
+            Quantity = quantity;
 
         }
         public int Id { get; private set; }
@@ -24,7 +29,7 @@ namespace ECommerce.Domain.Entities.Orders
         public string ProductName { get; private set; } = null!;
         public decimal UnitPrice { get; private set; }
         public int Quantity { get; private set; }
-        public decimal LineTotl => Quantity * UnitPrice;
+        public decimal LineTotal => Quantity * UnitPrice;
         //
         public static OrderItem Create(int productId, string productName, int quantity, decimal unitPrice)
         {

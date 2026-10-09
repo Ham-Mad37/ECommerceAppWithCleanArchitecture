@@ -6,6 +6,7 @@ namespace ECommerce.Application.Common.Interfaces
     {
         Task AddAsync(Product product, CancellationToken cancellationToken = default);
         Task<Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+        Task<Product?> GetByIdForUpdateAsync(int id, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<Product>> GetPagedAsync(
             ProductFilter filter,
             int pageNumber,

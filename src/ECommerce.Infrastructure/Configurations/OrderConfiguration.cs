@@ -40,7 +40,7 @@ namespace ECommerce.Infrastructure.Configurations
 
             builder.HasIndex(x => x.CreatedAt);
 
-            builder.HasOne<Customer>()
+            builder.HasOne(x=>x.Customer)
             .WithMany()
             .HasForeignKey(x => x.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);

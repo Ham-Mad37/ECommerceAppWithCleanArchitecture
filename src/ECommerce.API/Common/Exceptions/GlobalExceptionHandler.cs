@@ -1,12 +1,12 @@
 using ECommerce.Application.Common.Exceptions;
+using ECommerce.Domain.Common.Exceptions;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Common.Exceptions;
 
-public sealed class GlobalExceptionHandler
-    : IExceptionHandler
+public sealed class GlobalExceptionHandler : IExceptionHandler
 {
     private readonly ILogger<GlobalExceptionHandler> _logger;
 
@@ -25,69 +25,75 @@ public sealed class GlobalExceptionHandler
             exception,
             "An unhandled exception occurred.");
 
-        var statusCode = exception switch
+        if (exception is ValidationException validationException)
         {
-            ValidationException => StatusCodes.Status400BadRequest,
+            var errors = validationException.Errors
+                .GroupBy(x => x.PropertyName)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group
+                        .Select(x => x.ErrorMessage)
+                        .ToArray());
 
-            NotFoundException => StatusCodes.Status404NotFound,
+            await Results.ValidationProblem(
+                errors,
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Validation failed")
+                .ExecuteAsync(httpContext);
 
-            ConflictException => StatusCodes.Status409Conflict,
+            return true;
+        }
 
-            _ => StatusCodes.Status500InternalServerError
-        };
-
-        var problemDetails = new ProblemDetails
+        if (exception is UnauthorizedAccessException)
         {
-            Status = statusCode,
-            Title = GetTitle(statusCode),
-            Detail = GetDetail(exception, statusCode),
-            Instance = httpContext.Request.Path
-        };
+            await Results.Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Unauthorized",
+                detail: exception.Message)
+                .ExecuteAsync(httpContext);
 
-        httpContext.Response.StatusCode = statusCode;
+            return true;
+        }
 
-        await httpContext.Response.WriteAsJsonAsync(
-            problemDetails,
-            cancellationToken);
+        if (exception is NotFoundException notFoundException)
+        {
+            await Results.Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Resource not found",
+                detail: notFoundException.Message)
+                .ExecuteAsync(httpContext);
+
+            return true;
+        }
+
+        if (exception is ConflictException conflictException)
+        {
+            await Results.Problem(
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Conflict",
+                detail: conflictException.Message)
+                .ExecuteAsync(httpContext);
+
+            return true;
+        }
+
+        if (exception is DomainException domainException)
+        {
+            await Results.Problem(
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Business rule violation",
+                detail: domainException.Message)
+                .ExecuteAsync(httpContext);
+
+            return true;
+        }
+
+        await Results.Problem(
+            statusCode: StatusCodes.Status500InternalServerError,
+            title: "An unexpected error occurred.",
+            detail: "An unexpected error occurred while processing your request.")
+            .ExecuteAsync(httpContext);
 
         return true;
-    }
-
-    private static string GetTitle(int statusCode)
-    {
-        return statusCode switch
-        {
-            StatusCodes.Status400BadRequest =>
-                "Validation Error",
-
-            StatusCodes.Status404NotFound =>
-                "Resource Not Found",
-
-            StatusCodes.Status409Conflict =>
-                "Conflict",
-
-            _ =>
-                "Internal Server Error"
-        };
-    }
-
-    private static string GetDetail(
-        Exception exception,
-        int statusCode)
-    {
-        return statusCode switch
-        {
-            StatusCodes.Status400BadRequest =>
-                exception.Message,
-
-            StatusCodes.Status404NotFound =>
-                exception.Message,
-
-            StatusCodes.Status409Conflict =>
-                exception.Message,
-
-            _ =>
-                "An unexpected error occurred."
-        };
     }
 }
