@@ -1,6 +1,8 @@
 using ECommerce.Application.Common.Exceptions;
 using ECommerce.Application.Common.Interfaces;
+using ECommerce.Domain.Entities.Addresses;
 using ECommerce.Domain.Entities.Orders;
+using ECommerce.Domain.Entities.Payments;
 using MediatR;
 
 namespace ECommerce.Application.Features.Orders.CreateOrder
@@ -8,15 +10,18 @@ namespace ECommerce.Application.Features.Orders.CreateOrder
     public sealed class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int>
     {
         private readonly IOrderRepository _orderRepository;
+        private readonly IAddressRepository _addressRepository;
         private readonly ICartRepository _cartRepository;
         private readonly ICurrentUser _currentUser;
         private readonly IUnitOfWork _unitOfWork;
         public CreateOrderCommandHandler(IOrderRepository orderRepository,
             ICartRepository cartRepository,
+            IAddressRepository addressRepository,
             ICurrentUser currentUser,
             IUnitOfWork unitOfWork)
         {
             _orderRepository = orderRepository;
+            _addressRepository = addressRepository;
             _cartRepository = cartRepository;
             _currentUser = currentUser;
             _unitOfWork = unitOfWork;
@@ -30,6 +35,19 @@ namespace ECommerce.Application.Features.Orders.CreateOrder
                 throw new UnauthorizedAccessException("The authenticated user is not associated with a customer.");
 
             var customerId = _currentUser.CustomerId.Value;
+
+            Address? address;
+            if (request.AddressId.HasValue)
+            {
+                address = await _addressRepository.GetByIdAsync(request.AddressId.Value, customerId, cancellationToken)
+                ?? throw new NotFoundException($"Address with ID {request.AddressId.Value} was not found.");
+            }
+            else
+            {
+                var addresses = await _addressRepository.GetByCustomerIdAsync(customerId, cancellationToken);
+                address = addresses.FirstOrDefault(x=>x.IsDefault)
+                ?? throw new ConflictException("Please add a shipping address before placing an order.");
+            }
             int orderId = 0;
             await _unitOfWork.ExecuteInTransactionAsync(
                async () =>
@@ -42,6 +60,7 @@ namespace ECommerce.Application.Features.Orders.CreateOrder
                       "Cannot create an order from an empty cart.");
                    }
                    var order = Order.Create(customerId);
+                   order.SetShippingAddress(address);
                    foreach (var cartItem in cart.Items)
                    {
                        var product = cartItem.Product;
@@ -68,6 +87,7 @@ namespace ECommerce.Application.Features.Orders.CreateOrder
                    }
                    order.SetShippingCost(0);
                    order.SetDiscount(0);
+                   order.SetPayment(request.PaymentMethod??PaymentMethod.CashOnDelivery);
                    await _orderRepository.AddAsync(order, cancellationToken);
                    cart.Clear();
 

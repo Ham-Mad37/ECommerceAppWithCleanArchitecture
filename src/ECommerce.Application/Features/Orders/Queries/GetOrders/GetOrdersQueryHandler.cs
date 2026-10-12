@@ -27,26 +27,6 @@ public GetOrdersQueryHandler(IOrderRepository orderRepository,ICurrentUser curre
             _currentUser.CustomerId.Value, cancellationToken
         );
 
-        return orders
-        .Select(order => new OrderDto(
-            order.Id,
-            order.CustomerId,
-            order.Status.ToString(),
-            order.SubTotal,
-            order.ShippingCost,
-            order.Discount,
-            order.Total,
-            order.CreatedAt,
-            order.Items
-                .Select(item => new OrderItemDto(
-                    item.ProductId,
-                    item.ProductName,
-                    item.UnitPrice,
-                    item.Quantity,
-                    item.LineTotal))
-            .ToList()))
-
-        .ToList();
-        
+        return orders.Select(order => order.ToDto()).ToList();
     }
 }

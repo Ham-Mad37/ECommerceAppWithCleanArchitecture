@@ -94,6 +94,70 @@ namespace ECommerce.Infrastructure.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("ECommerce.Domain.Entities.Addresses.Address", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Line1")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Line2")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("RecipientName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("State")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("Addresses", (string)null);
+                });
+
             modelBuilder.Entity("ECommerce.Domain.Entities.Cart.Cart", b =>
                 {
                     b.Property<int>("Id")
@@ -381,6 +445,50 @@ namespace ECommerce.Infrastructure.Data.Migrations
                     b.ToTable("OrderItems", (string)null);
                 });
 
+            modelBuilder.Entity("ECommerce.Domain.Entities.Payments.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("Payments", (string)null);
+                });
+
             modelBuilder.Entity("ECommerce.Domain.Entities.Products.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -567,6 +675,15 @@ namespace ECommerce.Infrastructure.Data.Migrations
                     b.Navigation("Customer");
                 });
 
+            modelBuilder.Entity("ECommerce.Domain.Entities.Addresses.Address", b =>
+                {
+                    b.HasOne("ECommerce.Domain.Entities.Customers.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ECommerce.Domain.Entities.Cart.Cart", b =>
                 {
                     b.HasOne("ECommerce.Domain.Entities.Customers.Customer", null)
@@ -578,26 +695,92 @@ namespace ECommerce.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("ECommerce.Domain.Entities.Cart.CartItem", b =>
                 {
-                    b.HasOne("ECommerce.Domain.Entities.Cart.Cart", null)
+                    b.HasOne("ECommerce.Domain.Entities.Cart.Cart", "Cart")
                         .WithMany("Items")
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ECommerce.Domain.Entities.Products.Product", null)
+                    b.HasOne("ECommerce.Domain.Entities.Products.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Cart");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("ECommerce.Domain.Entities.Orders.Order", b =>
                 {
-                    b.HasOne("ECommerce.Domain.Entities.Customers.Customer", null)
+                    b.HasOne("ECommerce.Domain.Entities.Customers.Customer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.OwnsOne("ECommerce.Domain.Entities.Orders.ShippingAddress", "ShippingAddress", b1 =>
+                        {
+                            b1.Property<int>("OrderId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("ShippingCity");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("ShippingCountry");
+
+                            b1.Property<string>("Line1")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)")
+                                .HasColumnName("ShippingLine1");
+
+                            b1.Property<string>("Line2")
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)")
+                                .HasColumnName("ShippingLine2");
+
+                            b1.Property<string>("Phone")
+                                .IsRequired()
+                                .HasMaxLength(30)
+                                .HasColumnType("nvarchar(30)")
+                                .HasColumnName("ShippingPhone");
+
+                            b1.Property<string>("PostalCode")
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("ShippingPostalCode");
+
+                            b1.Property<string>("RecipientName")
+                                .IsRequired()
+                                .HasMaxLength(150)
+                                .HasColumnType("nvarchar(150)")
+                                .HasColumnName("ShippingRecipientName");
+
+                            b1.Property<string>("State")
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("ShippingState");
+
+                            b1.HasKey("OrderId");
+
+                            b1.ToTable("Orders");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OrderId");
+                        });
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("ShippingAddress");
                 });
 
             modelBuilder.Entity("ECommerce.Domain.Entities.Orders.OrderItem", b =>
@@ -611,6 +794,15 @@ namespace ECommerce.Infrastructure.Data.Migrations
                     b.HasOne("ECommerce.Domain.Entities.Products.Product", null)
                         .WithMany()
                         .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ECommerce.Domain.Entities.Payments.Payment", b =>
+                {
+                    b.HasOne("ECommerce.Domain.Entities.Orders.Order", null)
+                        .WithOne("Payment")
+                        .HasForeignKey("ECommerce.Domain.Entities.Payments.Payment", "OrderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -685,6 +877,8 @@ namespace ECommerce.Infrastructure.Data.Migrations
             modelBuilder.Entity("ECommerce.Domain.Entities.Orders.Order", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("Payment");
                 });
 #pragma warning restore 612, 618
         }

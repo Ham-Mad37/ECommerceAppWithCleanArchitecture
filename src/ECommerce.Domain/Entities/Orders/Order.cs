@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using ECommerce.Domain.Common.Exceptions;
+using ECommerce.Domain.Entities.Addresses;
 using ECommerce.Domain.Entities.Customers;
+using ECommerce.Domain.Entities.Payments;
 
 namespace ECommerce.Domain.Entities.Orders
 {
@@ -38,7 +40,20 @@ namespace ECommerce.Domain.Entities.Orders
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
         public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
+        public ShippingAddress? ShippingAddress { get; private set; }
+        public Payment? Payment { get; private set; }
+
         //
+        public void SetShippingAddress(Address address)
+        {
+            if (address is null)
+                throw new ArgumentNullException(nameof(address));
+            if (Status != OrderStatus.Pending)
+                throw new DomainException("Shipping address can only be set on pending orders.");
+                
+            ShippingAddress = ShippingAddress.From(address);
+            UpdatedAt = DateTime.UtcNow;
+        }
         public static Order Create(int customerId)
         {
             return new Order(customerId);
@@ -81,6 +96,28 @@ namespace ECommerce.Domain.Entities.Orders
 
             RecalculateTotals();
         }
+
+        public void SetPayment(PaymentMethod method)
+        {
+            if (Payment is not null)
+                throw new DomainException("Order already has a payment.");
+
+            Payment = Payment.Create(method, Total);
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void ConfirmPayment(string? refrence)
+        {
+            if (Payment is null)
+                throw new DomainException("This order has no payment record.");
+
+            if (Status == OrderStatus.Cancelled)
+                throw new DomainException("Cannot confirm payment for a cancelled order.");
+
+            Payment.MarkPaid(refrence);
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         public void Confirm()
         {
             if (Status != OrderStatus.Pending)
@@ -102,7 +139,9 @@ namespace ECommerce.Domain.Entities.Orders
             if (Status != OrderStatus.Processing)
                 throw new DomainException(
                     "Only processing orders can be shipped.");
-
+            if (Payment is { Method: PaymentMethod.BankTransfer, Status: not PaymentStatus.Paid })
+                throw new DomainException("Bank-transfer orders must be paid before shipping.");
+                
             Status = OrderStatus.Shipped;
             UpdatedAt = DateTime.UtcNow;
         }
@@ -113,6 +152,10 @@ namespace ECommerce.Domain.Entities.Orders
                     "Only shipped orders can be delivered.");
 
             Status = OrderStatus.Delivered;
+
+            if (Payment is { Method: PaymentMethod.CashOnDelivery, Status: PaymentStatus.Pending })
+                Payment.MarkPaid(null);
+                
             UpdatedAt = DateTime.UtcNow;
         }
         public void Cancel()
@@ -126,6 +169,7 @@ namespace ECommerce.Domain.Entities.Orders
                     "Order is already cancelled.");
 
             Status = OrderStatus.Cancelled;
+            Payment?.HandleOrderCancelled();
             UpdatedAt = DateTime.UtcNow;
         }
     }

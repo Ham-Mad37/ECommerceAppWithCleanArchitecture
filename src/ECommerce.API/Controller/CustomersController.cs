@@ -1,3 +1,4 @@
+using ECommerce.Application.Common.Constants;
 using ECommerce.Application.Features.Customers.Command.CreateCustomer;
 using ECommerce.Application.Features.Customers.Commands.ActivateCustomer;
 using ECommerce.Application.Features.Customers.Commands.DeactivateCustomer;
@@ -5,10 +6,12 @@ using ECommerce.Application.Features.Customers.Commands.UpdateCustomer;
 using ECommerce.Application.Features.Customers.Queries.GetCustomerById;
 using ECommerce.Application.Features.Customers.Queries.GetCustomers;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Controllers;
 
+[Authorize(Roles = Roles.Admin)]
 [ApiController]
 [Route("api/[controller]")]
 public sealed class CustomersController : ControllerBase

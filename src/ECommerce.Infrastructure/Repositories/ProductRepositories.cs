@@ -32,7 +32,7 @@ namespace ECommerce.Infrastructure.Repositories
         public async Task<int> GetCountAsync( ProductFilter filter,CancellationToken cancellationToken = default)
         {
             IQueryable<Product> query = _context.Products;
-            if (string.IsNullOrWhiteSpace(filter.Search))
+            if (!string.IsNullOrWhiteSpace(filter.Search))
             {
                 query = query.Where(x => x.Name.Contains(filter.Search));
             }

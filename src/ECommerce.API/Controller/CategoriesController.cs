@@ -1,3 +1,4 @@
+using ECommerce.Application.Common.Constants;
 using ECommerce.Application.Features.Categories.Command;
 using ECommerce.Application.Features.Categories.Command.ActivateCategory;
 using ECommerce.Application.Features.Categories.Command.CreateCategory;
@@ -6,11 +7,13 @@ using ECommerce.Application.Features.Categories.Command.UpdateCategoryCommand;
 using ECommerce.Application.Features.Categories.Queries.GetCategoriesQuery;
 using ECommerce.Application.Features.Categories.Queries.GetCategoryById;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
 namespace ECommerce.API.Controller
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public sealed class CategoriesController:ControllerBase
@@ -21,6 +24,7 @@ namespace ECommerce.API.Controller
             _mediator = mediator;
         }
         //GET: api/categories
+        [Authorize(Roles = Roles.Admin)]
         [HttpGet]
         public async Task<IActionResult> GetCategories(CancellationToken cancellationToken)
         {
@@ -45,6 +49,7 @@ namespace ECommerce.API.Controller
             return Ok(result);
         }
         //POST: api/categories
+        [Authorize(Roles = Roles.Admin)]
         [HttpPost]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryCommand command, CancellationToken cancellationToken)
         {
@@ -54,6 +59,7 @@ namespace ECommerce.API.Controller
 
         }
         //PUT: api/categories
+        [Authorize(Roles = Roles.Admin)]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCategory(int id, [FromBody] UpdateCategoryCommand command, CancellationToken cancellationToken)
         {
@@ -64,16 +70,18 @@ namespace ECommerce.API.Controller
         }
 
         //PATCH: api/categories
+        [Authorize(Roles = Roles.Admin)]
         [HttpPatch("{id:int}/activate")]
         public async Task<IActionResult> ActivateCategory(int id, CancellationToken cancellationToken)
         {
             var commad = new ActivateCategoryCommand(id);
 
             await _mediator.Send(commad, cancellationToken);
-            
+
             return NoContent();
         }
         //PATCH: api/categories
+        [Authorize(Roles = Roles.Admin)]
         [HttpPatch("{id:int}/deactivate")]
         public async Task<IActionResult> DeactivateCategory(int id,CancellationToken cancellationToken)
         {

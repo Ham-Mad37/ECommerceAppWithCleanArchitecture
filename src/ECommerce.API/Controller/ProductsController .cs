@@ -49,6 +49,7 @@ namespace ECommerce.API.Controller
         }
 
         //PUT: Api/products/5
+        [Authorize(Roles = Roles.Admin)]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdatePRoduct(int id, [FromBody] UpdateProductCommand command, CancellationToken cancellationToken)
         {
@@ -59,11 +60,12 @@ namespace ECommerce.API.Controller
         }
 
         // PATCH: api/product/5/activate
+        [Authorize(Roles = Roles.Admin)]
         [HttpPatch("{id:int}/activate")]
         public async Task<IActionResult> ActivateProduct(int id, CancellationToken cancellationToken)
         {
             var command = new ActivateProductCommand(id);
-            
+
             await _mediator.Send(command, cancellationToken);
 
             return NoContent();
@@ -71,6 +73,7 @@ namespace ECommerce.API.Controller
         }
 
         //PATCH: api/product/5/deactive
+        [Authorize(Roles = Roles.Admin)]
         [HttpPatch("{id:int}/deactivate")]
         public async Task<IActionResult> DeactivateProduct(int id, CancellationToken cancellationToken)
         {

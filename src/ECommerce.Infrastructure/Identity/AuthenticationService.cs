@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using ECommerce.Application.Common.Constants;
 using ECommerce.Application.Common.Exceptions;
 using ECommerce.Application.Common.Interfaces;
 using ECommerce.Application.Features.Authentication.DTOs;
@@ -52,6 +53,13 @@ public sealed class AuthenticationService : IAuthenticationService
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                 throw new IdentityException($"Failed to create user: {errors}");
+            }
+            // Assign the default role
+            var roleResult = await _userManager.AddToRoleAsync(user, Roles.Customer);
+            if(!roleResult.Succeeded)
+            {
+                var errors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+                throw new IdentityException($"Failed to assign role: {errors}");
             }
             //3. Everything succeeded
             await transaction.CommitAsync(cancellationToken);

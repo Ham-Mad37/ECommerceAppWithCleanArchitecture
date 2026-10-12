@@ -49,6 +49,18 @@ namespace ECommerce.Infrastructure.Configurations
             .WithOne()
             .HasForeignKey(x => x.OrderId)
             .OnDelete(DeleteBehavior.Restrict);
+
+            builder.OwnsOne(x => x.ShippingAddress, a =>
+            {
+                a.Property(p => p.RecipientName).HasColumnName("ShippingRecipientName").HasMaxLength(150).IsRequired();
+                a.Property(p => p.Phone).HasColumnName("ShippingPhone").HasMaxLength(30).IsRequired();
+                a.Property(p => p.Line1).HasColumnName("ShippingLine1").HasMaxLength(200).IsRequired();
+                a.Property(p => p.Line2).HasColumnName("ShippingLine2").HasMaxLength(200);
+                a.Property(p => p.City).HasColumnName("ShippingCity").HasMaxLength(100).IsRequired();
+                a.Property(p => p.State).HasColumnName("ShippingState").HasMaxLength(100);
+                a.Property(p => p.PostalCode).HasColumnName("ShippingPostalCode").HasMaxLength(20);
+                a.Property(p => p.Country).HasColumnName("ShippingCountry").HasMaxLength(100).IsRequired();
+            });
             
 
         }

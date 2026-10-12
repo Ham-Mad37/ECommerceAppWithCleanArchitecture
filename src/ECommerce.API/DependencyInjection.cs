@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi;
+using System.Text.Json.Serialization;
 namespace ECommerce.API
 {
     public static class DependencyInjection
@@ -68,7 +69,9 @@ namespace ECommerce.API
 
 
             services.AddAuthorization();
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(o => o.JsonSerializerOptions.Converters
+                .Add(new JsonStringEnumConverter()));
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(options =>
                 {

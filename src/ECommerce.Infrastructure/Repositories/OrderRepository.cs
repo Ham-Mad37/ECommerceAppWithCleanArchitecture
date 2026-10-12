@@ -33,6 +33,7 @@ namespace ECommerce.Infrastructure.Repositories
             return await _context.Orders
             .AsNoTracking()
             .Include(x => x.Items)
+            .Include(x => x.Payment)
             .Where(x => x.CustomerId == customerId)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -43,6 +44,7 @@ namespace ECommerce.Infrastructure.Repositories
             return await _context.Orders
             .AsNoTracking()
             .Include(x => x.Items)
+            .Include(x => x.Payment)
             .FirstOrDefaultAsync(
                 x => x.Id == orderId &&
                 x.CustomerId == customerId,
@@ -53,6 +55,7 @@ namespace ECommerce.Infrastructure.Repositories
         {
             return await _context.Orders
             .Include(x => x.Items)
+            .Include(x => x.Payment)
             .FirstOrDefaultAsync(x => x.Id == orderId, cancellationToken);
         }
 
@@ -60,6 +63,7 @@ namespace ECommerce.Infrastructure.Repositories
         {
             return await _context.Orders
             .Include(x => x.Items)
+            .Include(x => x.Payment)
             .FirstOrDefaultAsync(x => x.Id == orderId,cancellationToken);
         }
 

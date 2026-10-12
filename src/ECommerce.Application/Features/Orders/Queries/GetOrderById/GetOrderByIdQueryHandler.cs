@@ -28,23 +28,7 @@ public sealed class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery
 
         if (order is null)
             throw new NotFoundException($"Order with ID {request.OrderId} was not found");
-        
-        return new OrderDto(
-            order.Id,
-            order.CustomerId,
-            order.Status.ToString(),
-            order.SubTotal,
-            order.ShippingCost,
-            order.Discount,
-            order.Total,
-            order.CreatedAt,
-            order.Items
-                .Select(item => new OrderItemDto(
-                    item.ProductId,
-                    item.ProductName,
-                    item.UnitPrice,
-                    item.Quantity,
-                    item.LineTotal))
-                .ToList());
+
+        return order.ToDto();
     }
 }

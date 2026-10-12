@@ -50,7 +50,8 @@ namespace ECommerce.Domain.Entities.Products
 
             Name = name.Trim();
 
-            description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+            Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+
             CategoryId = categoryId;
             UpdatedAt = DateTime.UtcNow;
 
@@ -77,7 +78,7 @@ namespace ECommerce.Domain.Entities.Products
         }
         private void ValidateCatrgory(int categoryId)
         {
-            if (categoryId < 0)
+            if (categoryId <= 0)
             {
                 throw new ArgumentException("Category Id must be grater than zero.", nameof(categoryId));
             }

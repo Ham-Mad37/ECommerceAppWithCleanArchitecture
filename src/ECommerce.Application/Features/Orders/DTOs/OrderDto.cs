@@ -9,6 +9,8 @@ namespace ECommerce.Application.Features.Orders.DTOs
         decimal Discount,
         decimal Total,
         DateTime CreatedAt,
-        IReadOnlyCollection<OrderItemDto> items
+        IReadOnlyCollection<OrderItemDto> items,
+        ShippingAddressDto? ShippingAddress = null,
+        PaymentDto? Payment = null
     );
 }
