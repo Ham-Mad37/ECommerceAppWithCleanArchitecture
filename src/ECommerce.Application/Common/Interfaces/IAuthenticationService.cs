@@ -16,5 +16,9 @@ namespace ECommerce.Application.Common.Interfaces
             string password,
             CancellationToken cancellationToken = default
         );
+
+        Task<LoginResponseDto> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
+
+        Task LogoutAsync(string refreshToken, CancellationToken cancellationToken = default);
     }
 }

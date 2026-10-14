@@ -2,7 +2,6 @@ using ECommerce.Application.Common.Exceptions;
 using ECommerce.Domain.Common.Exceptions;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Common.Exceptions;
 
@@ -21,9 +20,18 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        _logger.LogError(
-            exception,
-            "An unhandled exception occurred.");
+        // Expected, client-caused errors are warnings; only real bugs are errors.
+        if (IsExpected(exception))
+        {
+            _logger.LogWarning(
+                "Handled {ExceptionType}: {Message}",
+                exception.GetType().Name,
+                exception.Message);
+        }
+        else
+        {
+            _logger.LogError(exception, "An unhandled exception occurred.");
+        }
 
         if (exception is ValidationException validationException)
         {
@@ -88,6 +96,36 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             return true;
         }
 
+        if (exception is IdentityException identityException)
+        {
+            await Results.Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Identity error",
+                detail: identityException.Message)
+                .ExecuteAsync(httpContext);
+
+            return true;
+        }
+
+
+        // NEW: invalid arguments thrown by domain entities -> 400
+        if (exception is ArgumentException argumentException)
+        {
+            // ArgumentException appends " (Parameter 'x')" to its message; strip it for clients.
+            var detail = argumentException.Message;
+            var index = detail.IndexOf(" (Parameter", StringComparison.Ordinal);
+            if (index >= 0)
+                detail = detail[..index];
+
+            await Results.Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid request",
+                detail: detail)
+                .ExecuteAsync(httpContext);
+
+            return true;
+        }
+
         await Results.Problem(
             statusCode: StatusCodes.Status500InternalServerError,
             title: "An unexpected error occurred.",
@@ -96,4 +134,13 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
 
         return true;
     }
+
+    private static bool IsExpected(Exception exception) =>
+        exception is ValidationException
+            or UnauthorizedAccessException
+            or NotFoundException
+            or ConflictException
+            or DomainException
+            or IdentityException
+            or ArgumentException;
 }

@@ -31,9 +31,10 @@ namespace ECommerce.Infrastructure.Configurations
 
             builder.Property(x => x.CreatedAt)
                 .IsRequired();
-            
+
             builder.Property(x => x.UpdatedAt)
                 .IsRequired();
+            builder.Property(x => x.RowVersion).IsRowVersion();
             builder.HasIndex(x => x.CategoryId);
 
             builder.HasOne(x=>x.Category)

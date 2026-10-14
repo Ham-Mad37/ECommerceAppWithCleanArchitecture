@@ -1,3 +1,5 @@
+using ECommerce.Application.Features.Authentication.Commands.Logout;
+using ECommerce.Application.Features.Authentication.Commands.Refresh;
 using ECommerce.Application.Features.Authentication.Commands.Register;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -31,5 +33,18 @@ public sealed class AuthController : ControllerBase
             cancellationToken);
 
         return Ok(result);
+    }
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenCommand command, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(command, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] LogoutCommand command, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(command, cancellationToken);
+        return NoContent();
     }
 }

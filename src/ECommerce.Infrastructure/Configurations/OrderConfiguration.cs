@@ -33,7 +33,7 @@ namespace ECommerce.Infrastructure.Configurations
 
             builder.Property(x => x.UpdatedAt)
                 .IsRequired();
-
+            builder.Property(x => x.RowVersion).IsRowVersion();
             builder.HasIndex(x => x.CustomerId);
 
             builder.HasIndex(x => x.Status);

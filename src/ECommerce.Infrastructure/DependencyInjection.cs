@@ -25,6 +25,7 @@ namespace ECommerce.Infrastructure
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IAddressRepository, AddressRepository>();
+            services.AddScoped<IDashboardQueries, DashboardQueries>();
             services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AppDbContext>());
             services
             .AddIdentity<ApplicationUser, IdentityRole>(options =>

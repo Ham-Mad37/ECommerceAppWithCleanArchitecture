@@ -39,6 +39,7 @@ namespace ECommerce.Domain.Entities.Orders
         public decimal Total { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
+        public byte[] RowVersion { get; private set; } = null!;
         public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
         public ShippingAddress? ShippingAddress { get; private set; }
         public Payment? Payment { get; private set; }

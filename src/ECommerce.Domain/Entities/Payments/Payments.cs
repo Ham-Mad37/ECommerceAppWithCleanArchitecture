@@ -20,7 +20,7 @@ namespace ECommerce.Domain.Entities.Payments
         {
             if (!Enum.IsDefined(method))
                 throw new DomainException("Invalid payment method.");
-            if (amount < 0)
+            if (amount <= 0)
                 throw new DomainException("Payment amount cannot be negative.");
 
             return new Payment

@@ -8,6 +8,8 @@ using ECommerce.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using ECommerce.Domain.Entities.Addresses;
 using ECommerce.Domain.Entities.Payments;
+using ECommerce.Application.Common.Exceptions;
+using ECommerce.Infrastructure.Identity;
 namespace ECommerce.Infrastructure.Data
 {
     public class AppDbContext : IdentityDbContext<ApplicationUser>, IUnitOfWork
@@ -25,6 +27,7 @@ namespace ECommerce.Infrastructure.Data
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
         public DbSet<Address> Addresses => Set<Address>();
         public DbSet<Payment> Payments => Set<Payment>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
         {
@@ -45,6 +48,19 @@ namespace ECommerce.Infrastructure.Data
         }
 
         //
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken=default)
+        {
+            try
+            {
+                return await base.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new ConflictException(
+                    "The data was changed by another request while processing yours. " +
+                    "Please review your cart or order and try again.");
+            }
+        }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -1,3 +1,4 @@
+using ECommerce.Domain.Common.Exceptions;
 using ECommerce.Domain.Entities.Categories;
 namespace ECommerce.Domain.Entities.Products
 {
@@ -36,6 +37,7 @@ namespace ECommerce.Domain.Entities.Products
         public bool IsActive { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
+        public byte[] RowVersion { get; private set; } = null!; 
 
         //
         public static Product Create(string name, string? description, decimal price, int stockQuantity, int categoryId)
@@ -118,7 +120,7 @@ namespace ECommerce.Domain.Entities.Products
             if (quantity <= 0)
                 throw new ArgumentException("Quantity must be grater than zero.", nameof(quantity));
             if (quantity > StockQuantity)
-                throw new InvalidOperationException("Insufficient stock.");
+                throw new DomainException("Insufficient stock.");
             StockQuantity -= quantity;
             UpdatedAt = DateTime.UtcNow;
         }
