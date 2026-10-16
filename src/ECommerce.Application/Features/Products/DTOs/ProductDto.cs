@@ -7,8 +7,10 @@ namespace ECommerce.Application.Features.Products.DTOs
         decimal Price,
         int StockQuantity,
         int CategoryId,
+        string CategoryName,
         bool IsActive,
         DateTime CreatedAt,
-        DateTime UpdatedAt
+        DateTime UpdatedAt,
+        IReadOnlyList<ProductImageDto> Images
     );
 }

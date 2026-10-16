@@ -1,4 +1,3 @@
-using AutoMapper;
 using ECommerce.Application.Common.Interfaces;
 using ECommerce.Application.Common.Models;
 using ECommerce.Application.Common.Modles;
@@ -10,18 +9,28 @@ namespace ECommerce.Application.Features.Products.Queries.GetProducts
     public sealed class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, PagedResult<ProductListDto>>
     {
         private readonly IProductRepository _productRepository;
-        private readonly IMapper _mapper;
-        public GetProductsQueryHandler(IProductRepository productRepository,IMapper mapper)
+        private readonly ICurrentUser _currentUser;
+        private readonly IProductImageStorage _storage;
+
+        public GetProductsQueryHandler(
+            IProductRepository productRepository,
+            ICurrentUser currentUser,
+            IProductImageStorage storage)
         {
             _productRepository = productRepository;
-            _mapper = mapper;
+            _currentUser = currentUser;
+            _storage = storage;
         }
+
         public async Task<PagedResult<ProductListDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
         {
+            // Visitors and customers only ever see active products.
+            bool? isActive = _currentUser.IsAdmin ? request.IsActive : true;
+
             var filter = new ProductFilter(
                 request.Search,
                 request.CategoryId,
-                request.IsActive,
+                isActive,
                 request.SortBy,
                 request.SortDirection
             );
@@ -32,11 +41,12 @@ namespace ECommerce.Application.Features.Products.Queries.GetProducts
                 request.pageSize,
                 cancellationToken);
 
-            var totalCount = await _productRepository.GetCountAsync(
-                filter,
-                cancellationToken);
-            var items = _mapper.Map<IReadOnlyCollection<ProductListDto>>(
-                products);
+            var totalCount = await _productRepository.GetCountAsync(filter, cancellationToken);
+
+            IReadOnlyCollection<ProductListDto> items = products
+                .Select(p => p.ToListDto(_storage))
+                .ToList();
+
             return new PagedResult<ProductListDto>(
                 items,
                 request.pageNumber,

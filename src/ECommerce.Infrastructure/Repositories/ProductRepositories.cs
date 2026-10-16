@@ -20,8 +20,25 @@ namespace ECommerce.Infrastructure.Repositories
 
         public async Task<Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            var product = await _context.Products.FirstOrDefaultAsync(x => x.Id == id,cancellationToken);
+            var product = await _context.Products.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
             return product;
+        }
+        // Tracked: used by the image commands (add / delete / set primary).
+        public Task<Product?> GetByIdWithImagesAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return _context.Products
+                .Include(x => x.Images)
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        }
+
+        // Read-only: used by the product detail endpoint.
+        public Task<Product?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return _context.Products
+                .AsNoTracking()
+                .Include(x => x.Category)
+                .Include(x => x.Images)
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
         public Task<Product?> GetByIdForUpdateAsync(int id, CancellationToken cancellationToken = default)
@@ -49,7 +66,11 @@ namespace ECommerce.Infrastructure.Repositories
 
         public async Task<IReadOnlyList<Product>> GetPagedAsync(ProductFilter filter,int pageNumber, int pageSize, CancellationToken cancellationToken = default)
         {
-            IQueryable<Product> query = _context.Products.AsNoTracking();
+            IQueryable<Product> query = _context.Products
+            .AsNoTracking()
+            .Include(x => x.Category)
+            .Include(x => x.Images.Where(i => i.IsPrimary));
+
             //Search
             if (!string.IsNullOrWhiteSpace(filter.Search))
             {

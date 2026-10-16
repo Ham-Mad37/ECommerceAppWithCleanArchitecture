@@ -5,6 +5,9 @@ namespace ECommerce.Application.Features.Products.DTOs
         string Name,
         decimal Price,
         int StockQuantity,
-        bool IsActive
+        bool IsActive,
+        int CategoryId,
+        string CategoryName,
+        string? PrimaryImageUrl
     );
 }

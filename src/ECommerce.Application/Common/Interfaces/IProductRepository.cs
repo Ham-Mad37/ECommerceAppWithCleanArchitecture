@@ -12,7 +12,9 @@ namespace ECommerce.Application.Common.Interfaces
             int pageNumber,
              int pageSize,
               CancellationToken cancellationToken = default);
-        Task<int> GetCountAsync(ProductFilter filter,CancellationToken cancellationToken = default);
+        Task<int> GetCountAsync(ProductFilter filter, CancellationToken cancellationToken = default);
+        Task<Product?> GetByIdWithImagesAsync(int id, CancellationToken cancellationToken = default);
+        Task<Product?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken = default);
 
     }
 }

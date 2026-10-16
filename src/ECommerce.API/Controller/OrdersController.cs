@@ -62,8 +62,8 @@ namespace ECommerce.API.Controller
 
         // PUT: api/Orders/5/cancel
         // Customer cancels his own order
-        [HttpPut("{id:int}/cancle")]
-        public async Task<IActionResult> Cancle(int id, CancellationToken cancellationToken)
+        [HttpPut("{id:int}/cancel")]
+        public async Task<IActionResult> Cancel(int id, CancellationToken cancellationToken)
         {
             await _mediator.Send(new CancelOrderCommand(id), cancellationToken);
             return NoContent();

@@ -22,6 +22,7 @@ public sealed class CartRepository : ICartRepository
         return await _context.Carts
         .Include(x=>x.Items)
         .ThenInclude(x=>x.Product)
+         .ThenInclude(p => p.Images.Where(i => i.IsPrimary))
         .FirstOrDefaultAsync(x => x.CustomerId == customerId, cancellationToken);
     }
 }

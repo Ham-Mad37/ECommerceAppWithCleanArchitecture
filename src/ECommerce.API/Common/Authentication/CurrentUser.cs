@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using ECommerce.Application.Common.Constants;
 using ECommerce.Application.Common.Interfaces;
 
 namespace ECommerce.API.Common.Authentication
@@ -46,5 +47,7 @@ namespace ECommerce.API.Common.Authentication
                 .User
                 .Identity?
                 .IsAuthenticated == true;
+        public bool IsAdmin =>
+    _httpContextAccessor.HttpContext?.User.IsInRole(Roles.Admin) == true;
     }
 }

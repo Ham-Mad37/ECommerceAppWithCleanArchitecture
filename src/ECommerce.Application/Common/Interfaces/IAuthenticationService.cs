@@ -17,8 +17,13 @@ namespace ECommerce.Application.Common.Interfaces
             CancellationToken cancellationToken = default
         );
 
+        Task<UserProfileDto> GetProfileAsync(string userId, CancellationToken cancellationToken = default);
+
+        Task ChangePasswordAsync(string userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default);
+
         Task<LoginResponseDto> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
 
         Task LogoutAsync(string refreshToken, CancellationToken cancellationToken = default);
+
     }
 }

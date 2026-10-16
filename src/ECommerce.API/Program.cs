@@ -1,7 +1,10 @@
 using System.Text;
 using ECommerce.API;
+using ECommerce.API.Common.Storage;
 using ECommerce.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -35,6 +38,20 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
+
+app.UseCors("Frontend");
+var storageOptions = app.Services.GetRequiredService<IOptions<StorageOptions>>().Value;
+var uploadsRoot = Path.GetFullPath(storageOptions.UploadsPath, app.Environment.ContentRootPath);
+Directory.CreateDirectory(uploadsRoot);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsRoot),
+    RequestPath = "/uploads",
+    // File names are unique GUIDs and never overwritten, so they can be cached for a year.
+    OnPrepareResponse = ctx =>
+        ctx.Context.Response.Headers.CacheControl = "public,max-age=31536000,immutable"
+});
 
 app.UseAuthentication();
 

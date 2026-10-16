@@ -23,8 +23,9 @@ namespace ECommerce.API.Controller
         {
             _mediator = mediator;
         }
+
         //GET: api/categories
-        [Authorize(Roles = Roles.Admin)]
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetCategories(CancellationToken cancellationToken)
         {
@@ -36,6 +37,7 @@ namespace ECommerce.API.Controller
         }
 
         //Get: api/categories/5
+        [AllowAnonymous]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetCategoryById(int id, CancellationToken cancellationToken)
         {

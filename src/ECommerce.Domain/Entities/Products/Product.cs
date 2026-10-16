@@ -1,9 +1,13 @@
 using ECommerce.Domain.Common.Exceptions;
 using ECommerce.Domain.Entities.Categories;
+using Microsoft.VisualBasic;
 namespace ECommerce.Domain.Entities.Products
 {
     public class Product
     {
+        public const int MaxImages = 8;
+        private readonly List<ProductImage> _images = new();
+    
         private Product()
         {
         }
@@ -37,9 +41,11 @@ namespace ECommerce.Domain.Entities.Products
         public bool IsActive { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
-        public byte[] RowVersion { get; private set; } = null!; 
+        public byte[] RowVersion { get; private set; } = null!;
 
+        public IReadOnlyCollection<ProductImage> Images => _images.AsReadOnly();
         //
+      
         public static Product Create(string name, string? description, decimal price, int stockQuantity, int categoryId)
         {
             return new Product(name, description, price, stockQuantity, categoryId);
@@ -64,6 +70,42 @@ namespace ECommerce.Domain.Entities.Products
             StockQuantity = quantity;
             UpdatedAt = DateTime.UtcNow;
         }
+
+        public ProductImage AddImage(string fileName)
+        {
+            if (Images.Count >= MaxImages)
+                throw new DomainException($"A product can have at most {MaxImages} images.");
+
+            var isFirst = _images.Count == 0;
+            var sortOrder = isFirst ? 0 : _images.Max(i => i.SortOrder) + 1;
+
+            var image = ProductImage.Create(fileName, isPrimary: isFirst, sortOrder);
+            _images.Add(image);
+            return image;
+        }
+        // Returns the stored file name so the caller can delete the file from storage.
+        public string RemoveImage(int imageId)
+        {
+            var image = _images.FirstOrDefault(i => i.Id == imageId)
+             ?? throw new DomainException("Image was not found on this product.");
+            _images.Remove(image);
+
+            // If the primary image was removed, promote the first remaining one.
+            if (image.IsPrimary && _images.Count > 0)
+                _images.OrderBy(i => i.SortOrder).First().SetPrimary(true);
+
+            return image.FileName;
+
+        }
+        public void SetPrimaryImage(int imageId)
+        {
+            if (_images.All(i => i.Id != imageId))
+                throw new DomainException("Image was not found on this product.");
+
+            foreach (var image in _images)
+                image.SetPrimary(image.Id == imageId);
+        }
+
         private void ValidateName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))

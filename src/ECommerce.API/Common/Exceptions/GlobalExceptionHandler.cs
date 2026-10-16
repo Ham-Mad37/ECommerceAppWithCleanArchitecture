@@ -107,6 +107,16 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             return true;
         }
 
+        if (exception is BadHttpRequestException badRequest)
+        {
+            await Results.Problem(
+                statusCode: badRequest.StatusCode,
+                title: "Bad request",
+                detail: badRequest.Message)
+                .ExecuteAsync(httpContext);
+
+            return true;
+        }
 
         // NEW: invalid arguments thrown by domain entities -> 400
         if (exception is ArgumentException argumentException)
@@ -142,5 +152,6 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             or ConflictException
             or DomainException
             or IdentityException
-            or ArgumentException;
+            or ArgumentException
+            or BadHttpRequestException;
 }

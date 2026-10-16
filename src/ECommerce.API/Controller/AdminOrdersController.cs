@@ -1,4 +1,5 @@
 using ECommerce.Application.Common.Constants;
+using ECommerce.Application.Features.Orders.Admin.GetOrderForAdmin;
 using ECommerce.Application.Features.Orders.Commands.ConfirmOrder;
 using ECommerce.Application.Features.Orders.Commands.DeliverOrder;
 using ECommerce.Application.Features.Orders.Commands.ShipOrder;
@@ -63,5 +64,10 @@ public sealed class AdminOrdersController : ControllerBase
         await _mediator.Send(new DeliverOrderCommand(id), cancellationToken);
         return NoContent();
     }
+
+    // GET: api/admin/orders/5
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetOrder(int id, CancellationToken cancellationToken)
+        => Ok(await _mediator.Send(new GetOrderForAdminQuery(id), cancellationToken));
 
 }

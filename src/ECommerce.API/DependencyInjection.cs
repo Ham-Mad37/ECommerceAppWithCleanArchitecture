@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi;
 using System.Text.Json.Serialization;
+using ECommerce.API.Common.Storage;
 namespace ECommerce.API
 {
     public static class DependencyInjection
@@ -66,6 +67,8 @@ namespace ECommerce.API
             services.AddProblemDetails();
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUser, CurrentUser>();
+            services.Configure<StorageOptions>(configuration.GetSection("Storage"));
+            services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
 
 
             services.AddAuthorization();
@@ -93,6 +96,15 @@ namespace ECommerce.API
 
                 });
             //
+            var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("Frontend", policy =>
+                    policy.WithOrigins(allowedOrigins)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod());
+            });
             return services;
         }
     }

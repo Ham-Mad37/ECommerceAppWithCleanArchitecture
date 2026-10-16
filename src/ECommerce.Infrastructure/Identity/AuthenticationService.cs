@@ -67,7 +67,7 @@ public sealed class AuthenticationService : IAuthenticationService
             }
             // Assign the default role
             var roleResult = await _userManager.AddToRoleAsync(user, Roles.Customer);
-            if(!roleResult.Succeeded)
+            if (!roleResult.Succeeded)
             {
                 var errors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
                 throw new IdentityException($"Failed to assign role: {errors}");
@@ -222,4 +222,49 @@ public sealed class AuthenticationService : IAuthenticationService
             .Where(x => x.UserId == userId && x.RevokedAt == null)
             .ExecuteUpdateAsync(s => s.SetProperty(x => x.RevokedAt, now), cancellationToken);
     }
+
+    public async Task<UserProfileDto> GetProfileAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId) ?? throw new UnauthorizedAccessException("User not found.");
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        string? firstName = null;
+        string? lastName = null;
+
+        if (user.CustomerId is not null)
+        {
+            var customer = await _dbContext.Customers.AsNoTracking()
+            .Where(c => c.Id == user.CustomerId)
+            .Select(c => new { c.FirstName, c.LastName })
+            .FirstOrDefaultAsync(cancellationToken);
+
+            firstName = customer?.FirstName;
+            lastName = customer?.LastName;
+        }
+            return new UserProfileDto(
+                user.Id,
+                user.Email!,
+                firstName,
+                lastName,
+                user.CustomerId,
+                roles.ToList()
+        );
+        
+    }
+
+    public async Task ChangePasswordAsync(string userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId)
+        ?? throw new UnauthorizedAccessException("User not found.");
+
+        var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            throw new IdentityException($"Failed to change password: {errors}");
+        }
+        // Sign out every other session.
+        await RevokeAllForUserAsync(user.Id, cancellationToken);
+    }  
 }

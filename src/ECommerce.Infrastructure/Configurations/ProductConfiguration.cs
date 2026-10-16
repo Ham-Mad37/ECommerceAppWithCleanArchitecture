@@ -37,10 +37,15 @@ namespace ECommerce.Infrastructure.Configurations
             builder.Property(x => x.RowVersion).IsRowVersion();
             builder.HasIndex(x => x.CategoryId);
 
-            builder.HasOne(x=>x.Category)
+            builder.HasOne(x => x.Category)
             .WithMany()
             .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(x => x.Images)
+            .WithOne()
+            .HasForeignKey(i => i.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

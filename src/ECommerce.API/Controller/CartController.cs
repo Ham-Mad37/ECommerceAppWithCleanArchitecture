@@ -1,4 +1,5 @@
 using ECommerce.API.Contracts.Carts;
+using ECommerce.Application.Common.Constants;
 using ECommerce.Application.Features.Carts.ClearCart;
 using ECommerce.Application.Features.Carts.Commands.AddCartItem;
 using ECommerce.Application.Features.Carts.Commands.RemoveCartItem;
@@ -10,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Controllers;
 
-[Authorize]
+[Authorize(Roles = Roles.Customer)]
 [ApiController]
 [Route("api/[controller]")]
 public sealed class CartController : ControllerBase

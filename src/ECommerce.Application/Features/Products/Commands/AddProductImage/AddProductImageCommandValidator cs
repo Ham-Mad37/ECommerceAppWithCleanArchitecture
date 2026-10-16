@@ -1,0 +1,28 @@
+namespace ECommerce.Application.Features.Products.Commands.AddProductImage
+{
+    public sealed class AddProductImageCommandValidator : AbstractValidator<AddProductImageCommand>
+    {
+        public const long MaxBytes = 5 * 1024 * 1024;
+
+        private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+        private static readonly string[] AllowedContentTypes = ["image/jpeg", "image/png", "image/webp"];
+
+        public AddProductImageCommandValidator()
+        {
+            RuleFor(x => x.ProductId).GreaterThan(0);
+
+            RuleFor(x => x.Length)
+                .GreaterThan(0).WithMessage("The file is empty.")
+                .LessThanOrEqualTo(MaxBytes).WithMessage("The file cannot exceed 5 MB.");
+
+            RuleFor(x => x.FileName)
+                .NotEmpty()
+                .Must(name => AllowedExtensions.Contains(Path.GetExtension(name).ToLowerInvariant()))
+                .WithMessage("Only .jpg, .jpeg, .png and .webp files are allowed.");
+
+            RuleFor(x => x.ContentType)
+                .Must(type => AllowedContentTypes.Contains((type ?? "").ToLowerInvariant()))
+                .WithMessage("Only JPEG, PNG and WebP images are allowed.");
+        }
+    }
+}

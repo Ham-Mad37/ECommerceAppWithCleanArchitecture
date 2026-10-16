@@ -4,6 +4,8 @@ using ECommerce.Application.Features.Products.Commands.ActivateProduct;
 using ECommerce.Application.Features.Products.Commands.AdjustProductStock;
 using ECommerce.Application.Features.Products.Commands.CreateProduct;
 using ECommerce.Application.Features.Products.Commands.DeactivateProduct;
+using ECommerce.Application.Features.Products.Commands.DeleteProductImage;
+using ECommerce.Application.Features.Products.Commands.SetPrimaryProductImage;
 using ECommerce.Application.Features.Products.Queries.GetProductById;
 using ECommerce.Application.Features.Products.Queries.GetProducts;
 using MediatR;
@@ -23,12 +25,14 @@ namespace ECommerce.API.Controller
             _mediator = mediator;
         }
         //Get: api/products
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetProducts([FromQuery] GetProductsQuery query, CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(query, cancellationToken);
             return Ok(result);
         }
+        [AllowAnonymous]
         //Get : api/products/5
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetProductById(int id, CancellationToken cancellationToken)
@@ -98,5 +102,43 @@ namespace ECommerce.API.Controller
             return NoContent();
         }
 
+        // POST: api/products/5/images   (multipart/form-data, field name: file)
+        [Authorize(Roles = Roles.Admin)]
+        [HttpPost("{productId:int}/images")]
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(6 * 1024 * 1024)]
+        public async Task<IActionResult> UploadImage(int productId, IFormFile file, CancellationToken cancellationToken)
+        {
+            if (file is null)
+                return BadRequest("A file is required (form field name: 'file').");
+
+            // Copy into memory (max ~5 MB) so the stream is seekable for the signature check.
+            await using var buffer = new MemoryStream();
+            await file.CopyToAsync(buffer, cancellationToken);
+            buffer.Position = 0;
+
+            var result = await _mediator.Send(
+                new AddProductImageCommand(productId, buffer, file.FileName, file.ContentType, file.Length),
+                cancellationToken);
+
+            return Ok(result);
+        }
+
+        // PATCH: api/products/5/images/12/primary
+        [Authorize(Roles = Roles.Admin)]
+        [HttpPatch("{productId:int}/images/{imageId:int}/primary")]
+        public async Task<IActionResult> SetPrimaryImage(int productId, int imageId, CancellationToken cancellationToken)
+        {
+            await _mediator.Send(new SetPrimaryProductImageCommand(productId, imageId), cancellationToken);
+            return NoContent();
+        }
+        // DELETE: api/products/5/images/12
+        [Authorize(Roles = Roles.Admin)]
+        [HttpDelete("{productId:int}/images/{imageId:int}")]
+        public async Task<IActionResult> DeleteImage(int productId, int imageId, CancellationToken cancellationToken)
+        {
+            await _mediator.Send(new DeleteProductImageCommand(productId, imageId), cancellationToken);
+            return NoContent();
+        }
     }
 }
