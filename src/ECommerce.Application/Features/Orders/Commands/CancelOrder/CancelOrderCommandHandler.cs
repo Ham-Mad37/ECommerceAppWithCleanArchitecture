@@ -1,5 +1,6 @@
 using ECommerce.Application.Common.Exceptions;
 using ECommerce.Application.Common.Interfaces;
+using ECommerce.Domain.Entities.Orders;
 using MediatR;
 
 namespace ECommerce.Application.Features.Orders.Commands.CancelOrder
@@ -29,9 +30,11 @@ namespace ECommerce.Application.Features.Orders.Commands.CancelOrder
             if (_currentUser.CustomerId is null)
                 throw new UnauthorizedAccessException(
                     "The authenticated user is not associated with a customer.");
-
+        
             var customerId = _currentUser.CustomerId.Value;
-
+            // =====================================================
+            // 1. Get customer's order
+            // =====================================================
             var order = await _orderRepository.GetByIdForUpdateAsync(request.OrderId,
                 customerId,
                 cancellationToken);
@@ -39,6 +42,16 @@ namespace ECommerce.Application.Features.Orders.Commands.CancelOrder
             if (order is null)
                 throw new NotFoundException($"Order with ID {request.OrderId} was not found");
 
+            // =====================================================
+            // 2. Validate cancellation status
+            // =====================================================
+            if (order.Status is not OrderStatus.Pending &&
+                order.Status is not OrderStatus.Confirmed)
+            {
+                throw new ConflictException(
+                    $"Order cannot be cancelled while its status is '{order.Status}'.");
+            }
+            
             await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
                 foreach (var orderItem in order.Items)
@@ -50,12 +63,18 @@ namespace ECommerce.Application.Features.Orders.Commands.CancelOrder
                         throw new NotFoundException(
                             $"Product with id {orderItem.ProductId} was not found.");
                     }
-
+                    // =====================================================
+                    // 4. Restore product stock
+                    // =====================================================
                     product.IncreaseStock(orderItem.Quantity);
                 }
-
+                // =====================================================
+                // 3. Cancel order
+                // =====================================================
                 order.Cancel();
-
+                // =====================================================
+                // 5. Save changes
+                // =====================================================
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
             }, cancellationToken);
         }

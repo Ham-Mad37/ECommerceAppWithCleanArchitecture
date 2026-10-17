@@ -4,7 +4,7 @@ using ECommerce.Application.Common.Interfaces;
 using ECommerce.Application.Common.Modles;
 using ECommerce.Application.Features.Orders.DTOs;
 using MediatR;
-public sealed class GetAllOrdersQueryHandler : IRequestHandler<GetAllOrdersQuery, PagedResult<OrderListDto>>
+public sealed class GetAllOrdersQueryHandler : IRequestHandler<GetAllForAdminQuery, PagedResult<OrderListDto>>
 {
     private readonly IOrderRepository _orderRepository;
 
@@ -13,7 +13,7 @@ public sealed class GetAllOrdersQueryHandler : IRequestHandler<GetAllOrdersQuery
         _orderRepository = orderRepository;
     }
 
-    public async Task<PagedResult<OrderListDto>> Handle(GetAllOrdersQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<OrderListDto>> Handle(GetAllForAdminQuery request, CancellationToken cancellationToken)
     {
         var orders = await _orderRepository.GetAdminOrdersAsync(
            request.Page,

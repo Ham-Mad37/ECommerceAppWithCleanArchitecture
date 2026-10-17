@@ -1,8 +1,6 @@
 using ECommerce.Application.Common.Exceptions;
 using ECommerce.Application.Common.Interfaces;
-using FluentValidation.Validators;
 using MediatR;
-using Microsoft.IdentityModel.Tokens;
 
 namespace ECommerce.Application.Features.Orders.Commands.ConfirmOrder;
 

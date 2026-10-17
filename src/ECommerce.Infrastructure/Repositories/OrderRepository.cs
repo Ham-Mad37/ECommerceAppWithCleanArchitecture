@@ -5,151 +5,202 @@ using ECommerce.Domain.Entities.Orders;
 using ECommerce.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace ECommerce.Infrastructure.Repositories
+namespace ECommerce.Infrastructure.Repositories;
+
+public sealed class OrderRepository : IOrderRepository
 {
-    public sealed class OrderRepository : IOrderRepository
+    private readonly AppDbContext _context;
+
+    public OrderRepository(AppDbContext context)
     {
-        private readonly AppDbContext _context;
-        public OrderRepository(AppDbContext context)
-        {
-            _context = context;
-        }
-        public async Task AddAsync(Order order, CancellationToken cancellationToken = default)
-        {
-            await _context.Orders.AddAsync(order, cancellationToken);
-        }
+        _context = context;
+    }
 
-        public async Task<IReadOnlyCollection<Order>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            return await _context.Orders
-            .AsNoTracking()
-            .Include(x => x.Items)
-            .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync();
-        }
+    public async Task AddAsync(
+        Order order,
+        CancellationToken cancellationToken = default)
+    {
+        await _context.Orders.AddAsync(
+            order,
+            cancellationToken);
+    }
 
-        public async Task<IReadOnlyCollection<Order>> GetByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default)
-        {
-            return await _context.Orders
-            .AsNoTracking()
+    public async Task<Order?> GetByIdAsync(
+        int orderId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Orders
             .Include(x => x.Items)
             .Include(x => x.Payment)
+            .Include(x => x.ShippingAddress)
+            .FirstOrDefaultAsync(
+                x => x.Id == orderId,
+                cancellationToken);
+    }
+
+    public async Task<Order?> GetByCustomerIdAsync(
+        int customerId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Orders
+            .Include(x => x.Items)
+            .Include(x => x.Payment)
+            .Include(x => x.ShippingAddress)
             .Where(x => x.CustomerId == customerId)
             .OrderByDescending(x => x.CreatedAt)
-            .ToListAsync(cancellationToken);
-        }
+            .FirstOrDefaultAsync(
+                cancellationToken);
+    }
 
-        public async Task<Order?> GetByIdAsync(int orderId, int customerId, CancellationToken cancellationToken = default)
-        {
-            return await _context.Orders
+    public async Task<IReadOnlyList<Order>> GetAllByCustomerIdAsync(
+        int customerId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Orders
             .AsNoTracking()
             .Include(x => x.Items)
             .Include(x => x.Payment)
+            .Include(x => x.ShippingAddress)
+            .Where(x => x.CustomerId == customerId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(
+                cancellationToken);
+    }
+
+    public async Task<Order?> GetByIdForUpdateAsync(
+        int orderId,
+        int customerId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Orders
+            .Include(x => x.Items)
+            .Include(x => x.Payment)
+            .Include(x => x.ShippingAddress)
             .FirstOrDefaultAsync(
-                x => x.Id == orderId &&
-                x.CustomerId == customerId,
-            cancellationToken);
-        }
+                x =>
+                    x.Id == orderId &&
+                    x.CustomerId == customerId,
+                cancellationToken);
+    }
 
-        public async Task<Order?> GetByIdForAdminAsync(int orderId, CancellationToken cancellationToken = default)
-        {
-            return await _context.Orders
+    public async Task<Order?> GetByIdForAdminAsync(
+        int orderId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Orders
             .Include(x => x.Items)
             .Include(x => x.Payment)
-            .FirstOrDefaultAsync(x => x.Id == orderId, cancellationToken);
-        }
+            .Include(x => x.ShippingAddress)
+            .FirstOrDefaultAsync(
+                x => x.Id == orderId,
+                cancellationToken);
+    }
 
-        public async Task<Order?> GetByIdForUpdateAsync(int orderId, CancellationToken cancellationToken = default)
-        {
-            return await _context.Orders
+    public async Task<IReadOnlyList<Order>> GetAllAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Orders
+            .AsNoTracking()
             .Include(x => x.Items)
             .Include(x => x.Payment)
-            .FirstOrDefaultAsync(x => x.Id == orderId,cancellationToken);
-        }
+            .Include(x => x.ShippingAddress)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(
+                cancellationToken);
+    }
 
-        public async Task<Order?> GetByIdForUpdateAsync(int orderId, int customerId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Order>> GetByStatusAsync(
+        OrderStatus status,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Orders
+            .AsNoTracking()
+            .Include(x => x.Items)
+            .Include(x => x.Payment)
+            .Include(x => x.ShippingAddress)
+            .Where(x => x.Status == status)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(
+                cancellationToken);
+    }
+
+    public async Task<PagedResult<OrderListDto>> GetAdminOrdersAsync(int page, int pageSize, string status, int? customerId, DateTime? from, DateTime? to, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Orders
+               .AsNoTracking()
+               .AsQueryable();
+        // Filter by status
+        if (!string.IsNullOrWhiteSpace(status))
         {
-            return await _context.Orders.Include
-            (x => x.Items)
-            .FirstOrDefaultAsync(x => x.Id == orderId && x.CustomerId == customerId, cancellationToken);
-
+            if (Enum.TryParse<OrderStatus>(
+                    status,
+                    ignoreCase: true,
+                    out var parsedStatus))
+            {
+                query = query.Where(x => x.Status == parsedStatus);
+            }
         }
-
-        public async Task<PagedResult<OrderListDto>> GetAdminOrdersAsync(
-            int page,
-            int pageSize,
-            string? status,
-            int? customerId,
-            DateTime? from,
-            DateTime? to,
-            CancellationToken cancellationToken = default)
+        // Filter by customer
+        if (customerId.HasValue)
         {
-            var query = _context.Orders
-                .AsNoTracking()
-                .AsQueryable();
-            // Filter by status
-            if (!string.IsNullOrWhiteSpace(status))
-            {
-                if (Enum.TryParse<OrderStatus>(
-                        status,
-                        ignoreCase: true,
-                        out var parsedStatus))
-                {
-                    query = query.Where(x => x.Status == parsedStatus);
-                }
-            }
-            // Filter by customer
-            if (customerId.HasValue)
-            {
-                query = query.Where(x => x.CustomerId == customerId.Value);
-            }
-            // Filter by start date
-            if (from.HasValue)
-            {
-                query = query.Where(x => x.CreatedAt >= from.Value);
-            }
-            // Filter by end date, including the entire specified day
-            if (to.HasValue)
-            {
-                query = query.Where(x => x.CreatedAt < to.Value.Date.AddDays(1));
-            }
-            // Count filtered orders before pagination
-            var totalCount = await query.CountAsync(cancellationToken);
+            query = query.Where(x => x.CustomerId == customerId.Value);
+        }
+        // Filter by start date
+        if (from.HasValue)
+        {
+            query = query.Where(x => x.CreatedAt >= from.Value);
+        }
+        // Filter by end date, including the entire specified day
+        if (to.HasValue)
+        {
+            query = query.Where(x => x.CreatedAt < to.Value.Date.AddDays(1));
+        }
+        // Count filtered orders before pagination
+        var totalCount = await query.CountAsync(cancellationToken);
 
-            // Retrieve only the fields needed for the list
-            var orders = await query
-            .OrderByDescending(o => o.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(o => new
-            {
+        // Retrieve only the fields needed for the list
+        var orders = await query
+        .OrderByDescending(o => o.CreatedAt)
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .Select(o => new
+        {
+            o.Id,
+            o.CustomerId,
+            CustomerName = o.Customer.FirstName + " " + o.Customer.LastName,
+            CustomerEmail = o.Customer.Email,
+            o.Status,
+            o.Total,
+            o.CreatedAt,
+            o.Payment
+        })
+         .ToListAsync(cancellationToken);
+        // Map the results to the DTO
+        var items = orders
+            .Select(o => new OrderListDto(
                 o.Id,
                 o.CustomerId,
-                CustomerName = o.Customer.FirstName + " " + o.Customer.LastName,
-                CustomerEmail = o.Customer.Email,
-                o.Status,
+                o.CustomerName,
+                o.CustomerEmail,
+                o.Status.ToString(),
                 o.Total,
-                o.CreatedAt
-            })
-             .ToListAsync(cancellationToken);
-            // Map the results to the DTO
-            var items = orders
-                .Select(o => new OrderListDto(
-                    o.Id,
-                    o.CustomerId,
-                    o.CustomerName,
-                    o.CustomerEmail,
-                    o.Status.ToString(),
-                    o.Total,
-                    o.CreatedAt))
-                .ToList();
+                o.CreatedAt,
+                 o.Payment == null
+                    ? null
+                    : new PaymentListDto(
+                        o.Payment.Method.ToString(),
+                        o.Payment.Status.ToString(),
+                        o.Payment.Amount,
+                        o.Payment.Reference
+                    )))
+            .ToList();
 
-            return new PagedResult<OrderListDto>(
-                items,
-                page,
-                pageSize,
-                totalCount
-            );
-        }
+        return new PagedResult<OrderListDto>(
+            items,
+            page,
+            pageSize,
+            totalCount
+        );
     }
+
 }

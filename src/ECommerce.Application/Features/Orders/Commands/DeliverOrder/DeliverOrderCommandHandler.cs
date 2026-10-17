@@ -24,7 +24,7 @@ namespace ECommerce.Application.Features.Orders.Commands.DeliverOrder
 
             order.Deliver();
 
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
     }
 }

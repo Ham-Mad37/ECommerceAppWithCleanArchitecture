@@ -23,7 +23,7 @@ public GetOrdersQueryHandler(IOrderRepository orderRepository,ICurrentUser curre
             throw new UnauthorizedAccessException(
                 "The authenticated user is not associated with a customer.");
                 
-        var orders = await _orderRepository.GetByCustomerIdAsync(
+        var orders = await _orderRepository.GetAllByCustomerIdAsync(
             _currentUser.CustomerId.Value, cancellationToken
         );
 

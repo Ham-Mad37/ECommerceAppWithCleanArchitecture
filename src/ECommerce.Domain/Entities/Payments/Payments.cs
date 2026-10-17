@@ -47,7 +47,7 @@ namespace ECommerce.Domain.Entities.Payments
             if (trimmed is not null && trimmed.Length > 100)
                 throw new DomainException("Payment reference cannot exceed 100 characters.");
 
-            refrence = trimmed;
+            Reference = trimmed;
             Status = PaymentStatus.Paid;
             PaidAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;

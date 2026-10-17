@@ -69,6 +69,7 @@ namespace ECommerce.Infrastructure.Repositories
             IQueryable<Product> query = _context.Products
             .AsNoTracking()
             .Include(x => x.Category)
+            .Where(x=>x.IsActive && x.Category.IsActive)
             .Include(x => x.Images.Where(i => i.IsPrimary));
 
             //Search

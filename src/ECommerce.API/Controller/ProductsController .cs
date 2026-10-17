@@ -57,7 +57,7 @@ namespace ECommerce.API.Controller
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdatePRoduct(int id, [FromBody] UpdateProductCommand command, CancellationToken cancellationToken)
         {
-            if (id != command.id)
+            if (id != command.Id)
                 return BadRequest("Route ID does not match product ID.");
             await _mediator.Send(command, cancellationToken);
             return NoContent();

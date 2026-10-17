@@ -1,13 +1,13 @@
 using ECommerce.Domain.Common.Exceptions;
 using ECommerce.Domain.Entities.Categories;
-using Microsoft.VisualBasic;
+
 namespace ECommerce.Domain.Entities.Products
 {
     public class Product
     {
         public const int MaxImages = 8;
         private readonly List<ProductImage> _images = new();
-    
+
         private Product()
         {
         }
@@ -33,7 +33,7 @@ namespace ECommerce.Domain.Entities.Products
 
         public int Id { get; set; }
         public string Name { get; private set; } = null!;
-        public string? Description { get; private set; } 
+        public string? Description { get; private set; }
         public decimal Price { get; private set; }
         public int StockQuantity { get; private set; }
         public int CategoryId { get; private set; }
@@ -45,8 +45,8 @@ namespace ECommerce.Domain.Entities.Products
 
         public IReadOnlyCollection<ProductImage> Images => _images.AsReadOnly();
         //
-      
-        public static Product Create(string name, string? description, decimal price, int stockQuantity, int categoryId)
+
+        public static Product Create(string name, string description, decimal price, int stockQuantity, int categoryId)
         {
             return new Product(name, description, price, stockQuantity, categoryId);
         }
@@ -115,7 +115,7 @@ namespace ECommerce.Domain.Entities.Products
         }
         private static void ValidateDescription(string? description)
         {
-            if(description is not null && description.Trim().Length>1000 )
+            if (description is not null && description.Trim().Length > 1000)
             {
                 throw new ArgumentException("Product description cannot exceed 1000 characters.", nameof(description));
             }
@@ -168,7 +168,7 @@ namespace ECommerce.Domain.Entities.Products
         }
         public void Activate()
         {
-            IsActive =  true;
+            IsActive = true;
             UpdatedAt = DateTime.UtcNow;
         }
 

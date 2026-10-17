@@ -24,7 +24,7 @@ public sealed class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery
         if (_currentUser.CustomerId is null)
             throw new UnauthorizedAccessException(
                 "The authenticated user is not associated with a customer.");
-        var order = await _orderRepository.GetByIdAsync(request.OrderId, _currentUser.CustomerId.Value, cancellationToken);
+        var order = await _orderRepository.GetByIdAsync(request.OrderId, cancellationToken);
 
         if (order is null)
             throw new NotFoundException($"Order with ID {request.OrderId} was not found");

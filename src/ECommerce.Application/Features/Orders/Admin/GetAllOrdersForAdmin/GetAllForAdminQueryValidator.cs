@@ -3,10 +3,10 @@ using FluentValidation;
 
 namespace ECommerce.Application.Features.Orders.Admin.GetAllOrders;
 
-public sealed class GetAllOrdersQueryValidator
-    : AbstractValidator<GetAllOrdersQuery>
+public sealed class GetAllForAdminQueryValidator
+    : AbstractValidator<GetAllForAdminQuery>
 {
-    public GetAllOrdersQueryValidator()
+    public GetAllForAdminQueryValidator()
     {
         RuleFor(x => x.Page)
            .GreaterThan(0);

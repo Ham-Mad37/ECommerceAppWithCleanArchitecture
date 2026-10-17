@@ -1,3 +1,5 @@
+using ECommerce.Domain.Common.Exceptions;
+
 namespace ECommerce.Domain.Entities.Cart
 {
     public class Cart
@@ -47,7 +49,7 @@ namespace ECommerce.Domain.Entities.Cart
         {
             var item = _items.FirstOrDefault(x => x.ProductId == productId);
             if (item is null)
-                throw new ArgumentException("Product dose not exist in cart");
+                throw new DomainException("Product dose not exist in cart");
             item.SetQuantity(quantity);
             UpdatedAt = DateTime.UtcNow;
         }

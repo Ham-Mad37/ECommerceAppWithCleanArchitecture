@@ -1,5 +1,6 @@
 using ECommerce.Application.Common.Exceptions;
 using ECommerce.Application.Common.Interfaces;
+using ECommerce.Domain.Common.Exceptions;
 using MediatR;
 
 namespace ECommerce.Application.Features.Carts.Commands.UpdateCartItem;
@@ -49,9 +50,9 @@ public sealed class UpdateCartItemCommandHandler : IRequestHandler<UpdateCartIte
             cart.UpdateQuantity(request.ProductId, request.Quantity);
 
         }
-        catch (KeyNotFoundException)
+        catch (DomainException)
         {
-            throw new NotFoundException($"Cart Item ,{request.ProductId} was not found. ");
+            throw new DomainException($"Cart Item ,{request.ProductId} was not found. ");
         }
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

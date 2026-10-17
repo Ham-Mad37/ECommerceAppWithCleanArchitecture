@@ -7,6 +7,7 @@ namespace ECommerce.Application.Features.Orders.DTOs
         string CustomerEmail,
         string Status,
         decimal Total,
-        DateTime CreatedAt
+        DateTime CreatedAt,
+        PaymentListDto? Payment
     );
 }

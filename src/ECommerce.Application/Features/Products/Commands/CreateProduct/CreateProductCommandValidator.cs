@@ -6,21 +6,21 @@ namespace ECommerce.Application.Features.Products.Commands.CreateProduct
     {
         public CreateProductCommandValidator()
         {
-            RuleFor(x => x.name)
+            RuleFor(x => x.Name)
             .NotEmpty()
             .MaximumLength(100);
 
-            RuleFor(x => x.description)
+            RuleFor(x => x.Description)
             .MaximumLength(1000)
-            .When(x => x.description is not null);
+            .When(x => x.Description is not null);
 
-            RuleFor(x => x.price)
+            RuleFor(x => x.Price)
            .GreaterThanOrEqualTo(0);
 
             RuleFor(x => x.StockQuantity)
            .GreaterThanOrEqualTo(0);
 
-            RuleFor(x => x.categoryId)
+            RuleFor(x => x.CategoryId)
             .GreaterThan(0);
 
         }

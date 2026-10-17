@@ -1,5 +1,6 @@
 using ECommerce.Application.Common.Interfaces;
 using ECommerce.Infrastructure.Data;
+using ECommerce.Infrastructure.Identity;
 using ECommerce.Infrastructure.Identity.Jwt;
 using ECommerce.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
