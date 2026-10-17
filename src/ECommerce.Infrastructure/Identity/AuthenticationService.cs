@@ -238,7 +238,7 @@ public sealed class AuthenticationService : IAuthenticationService
             .Where(c => c.Id == user.CustomerId)
             .Select(c => new { c.FirstName, c.LastName })
             .FirstOrDefaultAsync(cancellationToken);
-
+        
             firstName = customer?.FirstName;
             lastName = customer?.LastName;
         }

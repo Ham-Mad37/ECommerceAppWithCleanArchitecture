@@ -35,6 +35,9 @@ namespace ECommerce.Application.Features.Orders.CreateOrder
                 throw new UnauthorizedAccessException("The authenticated user is not associated with a customer.");
 
             var customerId = _currentUser.CustomerId.Value;
+            // =====================================================
+            // 1. Get shipping address
+            // =====================================================
 
             Address? address;
             if (request.AddressId.HasValue)
@@ -45,22 +48,38 @@ namespace ECommerce.Application.Features.Orders.CreateOrder
             else
             {
                 var addresses = await _addressRepository.GetByCustomerIdAsync(customerId, cancellationToken);
-                address = addresses.FirstOrDefault(x=>x.IsDefault)
+                address = addresses.FirstOrDefault(x => x.IsDefault)
                 ?? throw new ConflictException("Please add a shipping address before placing an order.");
             }
+            // =====================================================
+            // 2. Create order inside transaction
+            // =====================================================
             int orderId = 0;
             await _unitOfWork.ExecuteInTransactionAsync(
                async () =>
                {
-                   var cart = await _cartRepository.GetCartByCustomerIdAsync(_currentUser.CustomerId.Value, cancellationToken);
+                   // =================================================
+                   // Get customer cart
+                   // =================================================
+
+                   var cart = await _cartRepository.GetCartByCustomerIdAsync(customerId, cancellationToken);
 
                    if (cart is null || !cart.Items.Any())
                    {
                        throw new ConflictException(
                       "Cannot create an order from an empty cart.");
                    }
+                   // =================================================
+                   // Create order
+                   // =================================================
+
                    var order = Order.Create(customerId);
                    order.SetShippingAddress(address);
+
+                   // =================================================
+                   // Add order items
+                   // =================================================
+
                    foreach (var cartItem in cart.Items)
                    {
                        var product = cartItem.Product;
@@ -85,12 +104,32 @@ namespace ECommerce.Application.Features.Orders.CreateOrder
                        );
                        product.DecreaseStock(cartItem.Quantity);
                    }
+
+                   // =================================================
+                   // Pricing
+                   // =================================================
                    order.SetShippingCost(0);
                    order.SetDiscount(0);
-                   order.SetPayment(request.PaymentMethod??PaymentMethod.CashOnDelivery);
-                   await _orderRepository.AddAsync(order, cancellationToken);
-                   cart.Clear();
 
+                   // =================================================
+                   // Payment
+                   // =================================================
+
+                   order.SetPayment(request.PaymentMethod ?? PaymentMethod.CashOnDelivery);
+                   // =================================================
+                   // Save order
+                   // =================================================
+
+                   await _orderRepository.AddAsync(order, cancellationToken);
+                   // =================================================
+                   // Clear cart
+                   // =================================================
+
+                   cart.Clear();
+                   
+                   // =================================================
+                   // Save everything
+                   // =================================================
                    await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                    orderId = order.Id;

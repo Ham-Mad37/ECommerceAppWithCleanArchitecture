@@ -1,6 +1,7 @@
 using System.Text;
 using ECommerce.API;
 using ECommerce.API.Common.Storage;
+using ECommerce.Infrastructure.Data;
 using ECommerce.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
@@ -26,6 +27,12 @@ using (var scope = app.Services.CreateScope())
     await IdentitySeeder.SeedAsync(
         roleManager,
         userManager);
+    // Dev data only: never seed sample products in production.
+    if (app.Environment.IsDevelopment())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await CatalogSeeder.SeedAsync(db);
+    }
 }
 
 // Configure the HTTP request pipeline.
