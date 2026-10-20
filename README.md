@@ -341,3 +341,4 @@ dotnet test
 ---
 
 ## 📄 License
+MIT LICENSE
