@@ -1,6 +1,12 @@
-export interface Customer {
+export interface CustomerListItem {
   id: number;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  shippingAddress: string | null;
+  isActive: boolean; // backend DTO currently spells this "isAvtive" - see fix list
+}
+
+export interface Customer extends CustomerListItem {
+  createdAt: string;
+  updatedAt: string;
 }

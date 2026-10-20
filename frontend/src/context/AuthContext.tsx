@@ -23,7 +23,7 @@ interface AuthContextType {
 
   login: (
     request: LoginRequest
-  ) => Promise<void>;
+  ) => Promise<UserProfile>;
 
   register: (
     request: RegisterRequest
@@ -80,7 +80,7 @@ export function AuthProvider({
 
   const login = async (
     request: LoginRequest
-  ) => {
+  ): Promise<UserProfile> => {
     const response =
       await authService.login(request);
 
@@ -98,6 +98,8 @@ export function AuthProvider({
       await authService.getMe();
 
     setUser(currentUser);
+
+    return currentUser;
   };
 
   const register = async (

@@ -1,228 +1,79 @@
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-} from "react-router-dom";
+import { lazy } from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import MainLayout from "../layouts/MainLayout";
 import AdminLayout from "../layouts/AdminLayout";
-import LoginPage from "../pages/auth/LoginPage";
-import RegisterPage from "../pages/auth/RegisterPage";
-import ProductsPage from "../pages/products/ProductsPage";
-import CartPage from "../pages/cart/CartPage";
-import CheckoutPage from "../pages/checkout/CheckoutPage";
 import ProtectedRoute from "./ProtectedRoute";
 import AdminRoute from "./AdminRoute";
-import ProductDetailsPage from "../pages/products/ProductDetailsPage";
-import OrderDetailsPage from "../pages/orders/OrderDetailsPage";
+import PageBoundary from "../components/common/PageBoundary";
 
-function HomePage() {
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-      <h1 className="text-4xl font-bold text-slate-900">
-        Welcome to our store
-      </h1>
+const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
+const HomePage = lazy(() => import("../pages/HomePage"));
+const AboutPage = lazy(() => import("../pages/AboutPage"));
+const ContactPage = lazy(() => import("../pages/ContactPage"));
+const CategoriesPage = lazy(() => import("../pages/CategoriesPage"));
+const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
+const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
+const ProductsPage = lazy(() => import("../pages/products/ProductsPage"));
+const ProductDetailsPage = lazy(() => import("../pages/products/ProductDetailsPage"));
+const CartPage = lazy(() => import("../pages/cart/CartPage"));
+const CheckoutPage = lazy(() => import("../pages/checkout/CheckoutPage"));
+const OrdersPage = lazy(() => import("../pages/orders/OrdersPage"));
+const OrderDetailsPage = lazy(() => import("../pages/orders/OrderDetailsPage"));
+const ProfilePage = lazy(() => import("../pages/profile/ProfilePage"));
+const AddressesPage = lazy(() => import("../pages/addresses/AddressesPage"));
 
-      <p className="mt-4 text-slate-600">
-        Your React e-commerce frontend is ready.
-      </p>
-    </div>
-  );
-}
-
-
-function OrdersPage() {
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
-      <h1 className="text-3xl font-bold">
-        My Orders
-      </h1>
-    </div>
-  );
-}
-
-function ProfilePage() {
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
-      <h1 className="text-3xl font-bold">
-        Profile
-      </h1>
-    </div>
-  );
-}
-
-function AdminDashboard() {
-  return (
-    <div>
-      <h2 className="text-2xl font-bold text-slate-900">
-        Dashboard
-      </h2>
-    </div>
-  );
-}
-
-function AdminProducts() {
-  return (
-    <div>
-      <h2 className="text-2xl font-bold">
-        Products
-      </h2>
-    </div>
-  );
-}
-
-function AdminOrders() {
-  return (
-    <div>
-      <h2 className="text-2xl font-bold">
-        Orders
-      </h2>
-    </div>
-  );
-}
-
-function AdminCustomers() {
-  return (
-    <div>
-      <h2 className="text-2xl font-bold">
-        Customers
-      </h2>
-    </div>
-  );
-}
-
-function AdminCategories() {
-  return (
-    <div>
-      <h2 className="text-2xl font-bold">
-        Categories
-      </h2>
-    </div>
-  );
-}
-
-function AdminInventory() {
-  return (
-    <div>
-      <h2 className="text-2xl font-bold">
-        Inventory
-      </h2>
-    </div>
-  );
-}
+const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
+const AdminProducts = lazy(() => import("../pages/admin/AdminProducts"));
+const AdminInventory = lazy(() => import("../pages/admin/AdminInventory"));
+const AdminCategories = lazy(() => import("../pages/admin/AdminCategories"));
+const AdminCustomers = lazy(() => import("../pages/admin/AdminCustomers"));
+const AdminOrders = lazy(() => import("../pages/admin/AdminOrders"));
+const AdminOrderDetails = lazy(() => import("../pages/admin/AdminOrderDetails"));
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
+      <PageBoundary>
       <Routes>
-
-        {/* Public + Store */}
-
+        {/* Public store */}
         <Route element={<MainLayout />}>
-          <Route
-            path="/"
-            element={<HomePage />}
-          />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:id" element={<ProductDetailsPage />} />
+          <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
 
-          <Route
-            path="/login"
-            element={<LoginPage />}
-          />
-
-          <Route
-            path="/register"
-            element={<RegisterPage />}
-          />
-
-          <Route
-            path="/products"
-            element={<ProductsPage />}
-          />
-          <Route
-            path="/products/:id"
-            element={<ProductDetailsPage />}
-          />
-          <Route
-            path="/cart"
-            element={<CartPage />}
-          />
-          {/* Customer protected routes */}
-
+          {/* Signed-in customers */}
           <Route element={<ProtectedRoute />}>
-            <Route
-              path="/cart"
-              element={<CartPage />}
-            />
-
-            <Route
-              path="/orders"
-              element={<OrdersPage />}
-            />
-            <Route
-              path="/checkout"
-              element={<CheckoutPage />}
-            />
-            
-            <Route
-              path="/profile"
-              element={<ProfilePage />}
-            />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/:orderId" element={<OrderDetailsPage />} />
+            <Route path="/addresses" element={<AddressesPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
         </Route>
 
         {/* Admin */}
-
         <Route element={<AdminRoute />}>
           <Route element={<AdminLayout />}>
-            <Route
-              path="/admin"
-              element={<AdminDashboard />}
-            />
-
-            <Route
-              path="/admin/products"
-              element={<AdminProducts />}
-            />
-
-            <Route
-              path="/admin/orders"
-              element={<AdminOrders />}
-            />
-            <Route
-              path="/orders/:orderId"
-              element={<OrderDetailsPage />}
-            />
-
-            <Route
-              path="/admin/customers"
-              element={<AdminCustomers />}
-            />
-
-            <Route
-              path="/admin/categories"
-              element={<AdminCategories />}
-            />
-
-            <Route
-              path="/admin/inventory"
-              element={<AdminInventory />}
-            />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/inventory" element={<AdminInventory />} />
+            <Route path="/admin/categories" element={<AdminCategories />} />
+            <Route path="/admin/customers" element={<AdminCustomers />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
+            <Route path="/admin/orders/:orderId" element={<AdminOrderDetails />} />
           </Route>
         </Route>
 
-        {/* Fallback */}
-
-        <Route
-          path="*"
-          element={
-            <Navigate
-              to="/"
-              replace
-            />
-          }
-        />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      </PageBoundary>
     </BrowserRouter>
   );
 }

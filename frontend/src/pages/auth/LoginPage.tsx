@@ -15,9 +15,11 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
+import { getApiError } from "../../utils/format";
 
 interface LocationState {
   from?: string;
+  registered?: boolean;
 }
 
 export default function LoginPage() {
@@ -64,7 +66,7 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      await login({
+      const profile = await login({
         email: email.trim(),
         password,
       });
@@ -76,17 +78,19 @@ export default function LoginPage() {
        * Otherwise send them to the store.
        */
       const destination =
-        locationState?.from ?? "/";
+        locationState?.from ??
+        (profile.roles.includes("Admin")
+          ? "/admin"
+          : "/");
 
       navigate(destination, {
         replace: true,
       });
     } catch (error: any) {
-      const message =
-        error?.response?.data?.detail ??
-        error?.response?.data?.message ??
-        error?.response?.data?.title ??
-        "Invalid email or password.";
+      const message = getApiError(
+        error,
+        "Invalid email or password."
+      );
 
       setError(message);
     } finally {
@@ -121,6 +125,12 @@ export default function LoginPage() {
           {/* Card */}
 
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+
+            {locationState?.registered && !error && (
+              <div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                Account created. You can sign in now.
+              </div>
+            )}
 
             {error && (
               <div

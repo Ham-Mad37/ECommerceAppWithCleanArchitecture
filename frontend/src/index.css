@@ -10,39 +10,80 @@
     "Segoe UI",
     sans-serif;
 
-  color: #0f172a;
-  background: #f8fafc;
+  color: var(--color-slate-900);
+  background: var(--color-slate-50);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
-* {
-  box-sizing: border-box;
+/* base rules must live in a layer, otherwise they beat Tailwind utilities (e.g. a{color:inherit} hid text-white on link buttons) */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background: var(--color-slate-50);
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
-html {
-  scroll-behavior: smooth;
+/* ---------- Dark mode ----------
+   Tailwind builds every colour utility from these variables, so re-mapping the
+   slate scale (and the tinted status colours) re-themes all pages at once. */
+.dark {
+  color-scheme: dark;
+  --color-white: #131d33;
+  --color-slate-50: #0b1220;
+  --color-slate-100: #1a2540;
+  --color-slate-200: #25314f;
+  --color-slate-300: #34425f;
+  --color-slate-400: #6b7a96;
+  --color-slate-500: #8e9bb4;
+  --color-slate-600: #aab4c8;
+  --color-slate-700: #c5cddc;
+  --color-slate-800: #dde3ee;
+  --color-slate-900: #f1f5f9;
+  --color-slate-950: #f8fafc;
+
+  --color-green-50: #0f2a1d;   --color-green-100: #14391f;  --color-green-200: #1f5a3a;
+  --color-green-600: #4ade80;  --color-green-800: #bbf7d0;
+  --color-red-50: #2a1215;     --color-red-100: #3b161a;    --color-red-200: #6b2227;
+  --color-red-500: #f87171;    --color-red-600: #f87171;    --color-red-700: #fecaca;  --color-red-800: #fecaca;
+  --color-amber-100: #3a2a0b;  --color-amber-700: #fcd34d;  --color-amber-800: #fde68a;
+  --color-blue-100: #13294d;   --color-blue-800: #bfdbfe;
+  --color-indigo-100: #25214d; --color-indigo-800: #c7d2fe;
+  --color-purple-100: #33204d; --color-purple-800: #e9d5ff;
+  --color-emerald-600: #34d399;
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background: #f8fafc;
-}
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.fade-in { animation: fade-in .25s ease-out; }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
+:focus-visible { outline: 2px solid var(--color-slate-900); outline-offset: 2px; }
 
-button {
-  cursor: pointer;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
+@media print {
+  html, body { background: #fff !important; color: #000 !important; }
 }

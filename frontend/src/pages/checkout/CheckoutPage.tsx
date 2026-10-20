@@ -1,896 +1,234 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  Link,
-  useNavigate,
-} from "react-router-dom";
-
-import {
-  ArrowLeft,
-  CheckCircle2,
-  Loader2,
-  MapPin,
-  ShoppingBag,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Check, CheckCircle2, Loader2, MapPin, Package } from "lucide-react";
 
 import { cartService } from "../../services/cartService";
 import { addressService } from "../../services/addressService";
 import { orderService } from "../../services/orderService";
-
+import { useCart } from "../../context/CartContext";
+import { Alert, btnPrimary, btnSecondary, card } from "../../components/common/ui";
+import { ListSkeleton } from "../../components/common/Skeleton";
+import { blockingItems } from "../../utils/cartIssues";
+import { getApiError, money } from "../../utils/format";
 import type { Cart } from "../../types/cart";
 import type { Address } from "../../types/address";
+import type { PaymentMethod } from "../../types/order";
+
+const PAYMENT_OPTIONS: { value: PaymentMethod; title: string; hint: string }[] = [
+  { value: "CashOnDelivery", title: "Cash on delivery", hint: "Pay when your order arrives." },
+  { value: "BankTransfer", title: "Bank transfer", hint: "We ship after we confirm your transfer." },
+];
+
+type Step = "details" | "review";
+
+function AddressText({ a }: { a: Address }) {
+  return (
+    <address className="text-sm not-italic leading-6 text-slate-600">
+      <span className="font-semibold text-slate-900">{a.recipientName}</span><br />
+      {a.line1}{a.line2 ? `, ${a.line2}` : ""}<br />
+      {[a.city, a.state, a.postalCode, a.country].filter(Boolean).join(", ")}<br />
+      {a.phone}
+    </address>
+  );
+}
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
+  const { refresh: refreshBadge } = useCart();
 
-  // =========================================================
-  // STATE
-  // =========================================================
-
-  const [cart, setCart] =
-    useState<Cart | null>(null);
-
-  const [addresses, setAddresses] =
-    useState<Address[]>([]);
-
-  const [
-    selectedAddressId,
-    setSelectedAddressId,
-  ] = useState<number | null>(null);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [
-    loadingAddresses,
-    setLoadingAddresses,
-  ] = useState(true);
-
-  const [
-    placingOrder,
-    setPlacingOrder,
-  ] = useState(false);
-
-  const [error, setError] =
-    useState("");
-
-  // =========================================================
-  // LOAD CART
-  // =========================================================
-
-  const loadCart = useCallback(
-    async () => {
-      try {
-        const data =
-          await cartService.getCart();
-
-        setCart(data);
-
-        return data;
-      } catch (error: any) {
-        const status =
-          error?.response?.status;
-
-        if (status === 401) {
-          navigate("/login", {
-            state: {
-              from: "/checkout",
-            },
-          });
-
-          return null;
-        }
-
-        const message =
-          error?.response?.data?.detail ??
-          error?.response?.data?.message ??
-          error?.response?.data?.title ??
-          "Unable to load your cart.";
-
-        throw new Error(message);
-      }
-    },
-    [navigate]
-  );
-
-  // =========================================================
-  // LOAD ADDRESSES
-  // =========================================================
-
-  const loadAddresses =
-    useCallback(async () => {
-      try {
-        setLoadingAddresses(true);
-
-        const data =
-          await addressService.getAddresses();
-
-        setAddresses(data);
-
-        // Select default address automatically
-        const defaultAddress =
-          data.find(
-            (address) =>
-              address.isDefault
-          );
-
-        if (defaultAddress) {
-          setSelectedAddressId(
-            defaultAddress.id
-          );
-        } else if (data.length > 0) {
-          // If no default address exists,
-          // select the first address.
-          setSelectedAddressId(
-            data[0].id
-          );
-        } else {
-          setSelectedAddressId(null);
-        }
-
-        return data;
-      } catch (error: any) {
-        const status =
-          error?.response?.status;
-
-        if (status === 401) {
-          navigate("/login", {
-            state: {
-              from: "/checkout",
-            },
-          });
-
-          return null;
-        }
-
-        const message =
-          error?.response?.data?.detail ??
-          error?.response?.data?.message ??
-          error?.response?.data?.title ??
-          "Unable to load your addresses.";
-
-        throw new Error(message);
-      } finally {
-        setLoadingAddresses(false);
-      }
-    }, [navigate]);
-
-  // =========================================================
-  // INITIAL LOAD
-  // =========================================================
+  const [step, setStep] = useState<Step>("details");
+  const [cart, setCart] = useState<Cart | null>(null);
+  const [addresses, setAddresses] = useState<Address[] | null>(null);
+  const [addressId, setAddressId] = useState<number | null>(null);
+  const [payment, setPayment] = useState<PaymentMethod>("CashOnDelivery");
+  const [error, setError] = useState("");
+  const [placing, setPlacing] = useState(false);
 
   useEffect(() => {
-    const loadCheckout =
-      async () => {
-        try {
-          setLoading(true);
-          setError("");
+    let cancelled = false;
+    Promise.all([cartService.getCart(), addressService.getAddresses()])
+      .then(([c, a]) => {
+        if (cancelled) return;
+        setCart(c);
+        setAddresses(a);
+        setAddressId((a.find((x) => x.isDefault) ?? a[0])?.id ?? null);
+      })
+      .catch((e) => !cancelled && setError(getApiError(e, "Unable to load checkout.")));
+    return () => { cancelled = true; };
+  }, []);
 
-          await Promise.all([
-            loadCart(),
-            loadAddresses(),
-          ]);
-        } catch (error: any) {
-          setError(
-            error?.message ??
-              "Unable to load checkout."
-          );
-        } finally {
-          setLoading(false);
-        }
-      };
+  if (!cart || !addresses) {
+    return <div className="mx-auto max-w-5xl px-4 py-10">{error ? <Alert>{error}</Alert> : <ListSkeleton rows={3} />}</div>;
+  }
 
-    loadCheckout();
-  }, [
-    loadCart,
-    loadAddresses,
-  ]);
-
-  // =========================================================
-  // PLACE ORDER
-  // =========================================================
-
-  const handlePlaceOrder =
-    async () => {
-      // -----------------------------------------------
-      // Validate selected address
-      // -----------------------------------------------
-
-      if (
-        selectedAddressId === null
-      ) {
-        setError(
-          "Please select a shipping address before placing your order."
-        );
-
-        return;
-      }
-
-      // -----------------------------------------------
-      // Validate cart
-      // -----------------------------------------------
-
-      if (
-        !cart ||
-        cart.items.length === 0
-      ) {
-        setError(
-          "Your cart is empty."
-        );
-
-        return;
-      }
-
-      try {
-        setPlacingOrder(true);
-        setError("");
-
-        // ---------------------------------------------
-        // Create order
-        // ---------------------------------------------
-
-        const orderId =
-          await orderService.createOrder(
-            selectedAddressId
-          );
-
-        // ---------------------------------------------
-        // Navigate to order
-        // ---------------------------------------------
-
-        navigate(
-          `/orders/${orderId}`,
-          {
-            replace: true,
-            state: {
-              orderCreated: true,
-            },
-          }
-        );
-      } catch (error: any) {
-        const status =
-          error?.response?.status;
-
-        // ---------------------------------------------
-        // Unauthorized
-        // ---------------------------------------------
-
-        if (status === 401) {
-          navigate("/login", {
-            state: {
-              from: "/checkout",
-            },
-          });
-
-          return;
-        }
-
-        // ---------------------------------------------
-        // Business / API error
-        // ---------------------------------------------
-
-        const message =
-          error?.response?.data?.detail ??
-          error?.response?.data?.message ??
-          error?.response?.data?.title ??
-          "Unable to place your order.";
-
-        setError(message);
-      } finally {
-        setPlacingOrder(false);
-      }
-    };
-
-  // =========================================================
-  // LOADING
-  // =========================================================
-
-  if (loading) {
+  if (cart.items.length === 0) {
     return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-slate-500">
-
-          <Loader2
-            size={34}
-            className="animate-spin"
-          />
-
-          <p className="text-sm">
-            Loading checkout...
-          </p>
-
-        </div>
+      <div className="mx-auto max-w-xl px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold text-slate-900">Your cart is empty</h1>
+        <p className="mt-2 text-slate-500">Add something before checking out.</p>
+        <Link to="/products" className={`${btnPrimary} mt-6`}>Browse products</Link>
       </div>
     );
   }
 
-  // =========================================================
-  // CART ERROR
-  // =========================================================
+  const blocked = blockingItems(cart);
+  const address = addresses.find((a) => a.id === addressId) ?? null;
+  const method = PAYMENT_OPTIONS.find((o) => o.value === payment)!;
+  const units = cart.items.reduce((n, i) => n + i.quantity, 0);
 
-  if (!cart) {
-    return (
-      <div className="mx-auto flex min-h-[70vh] max-w-7xl flex-col items-center justify-center px-4 text-center">
+  const placeOrder = async () => {
+    if (!address || blocked.length > 0) return;
+    try {
+      setPlacing(true);
+      setError("");
+      const orderId = await orderService.createOrder(address.id, payment);
+      await refreshBadge();
+      navigate(`/orders/${orderId}`, { replace: true, state: { orderCreated: true } });
+    } catch (e) {
+      // stock may have changed since the cart loaded - show the message and let the customer fix the cart
+      setError(getApiError(e, "We couldn't place your order."));
+      setStep("details");
+      setCart(await cartService.getCart().catch(() => cart));
+    } finally {
+      setPlacing(false);
+    }
+  };
 
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-50">
-
-          <ShoppingBag
-            size={34}
-            className="text-red-400"
-          />
-
-        </div>
-
-        <h1 className="mt-6 text-2xl font-bold text-slate-900">
-          Unable to load checkout
-        </h1>
-
-        <p className="mt-2 max-w-md text-slate-500">
-          {error ||
-            "Something went wrong while loading your checkout."}
-        </p>
-
-        <Link
-          to="/cart"
-          className="mt-6 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-        >
-          Back to Cart
-        </Link>
-
-      </div>
-    );
-  }
-
-  // =========================================================
-  // EMPTY CART
-  // =========================================================
-
-  if (
-    cart.items.length === 0
-  ) {
-    return (
-      <div className="mx-auto flex min-h-[70vh] max-w-7xl flex-col items-center justify-center px-4 text-center">
-
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100">
-
-          <ShoppingBag
-            size={34}
-            className="text-slate-400"
-          />
-
-        </div>
-
-        <h1 className="mt-6 text-2xl font-bold text-slate-900">
-          Your cart is empty
-        </h1>
-
-        <p className="mt-2 text-slate-500">
-          Add some products before checking out.
-        </p>
-
-        <Link
-          to="/products"
-          className="mt-6 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-        >
-          Continue Shopping
-        </Link>
-
-      </div>
-    );
-  }
-
-  // =========================================================
-  // MAIN CHECKOUT
-  // =========================================================
+  const steps: { id: Step; label: string }[] = [{ id: "details", label: "Delivery & payment" }, { id: "review", label: "Review & place order" }];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+      <Link to="/cart" className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900"><ArrowLeft size={17} /> Back to cart</Link>
+      <h1 className="text-3xl font-bold tracking-tight text-slate-900">Checkout</h1>
 
-      {/* ===================================================
-          HEADER
-      =================================================== */}
+      <ol className="mt-6 flex items-center gap-3 text-sm font-medium" aria-label="Checkout steps">
+        {steps.map((s, i) => {
+          const active = s.id === step;
+          const done = step === "review" && s.id === "details";
+          return (
+            <li key={s.id} className="flex items-center gap-3" aria-current={active ? "step" : undefined}>
+              <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${done || active ? "bg-slate-900 text-white" : "bg-slate-200 text-slate-500"}`}>{done ? <Check size={14} strokeWidth={3} /> : i + 1}</span>
+              <span className={active ? "text-slate-900" : "text-slate-400"}>{s.label}</span>
+              {i === 0 && <span className="mx-1 h-px w-8 bg-slate-300" />}
+            </li>
+          );
+        })}
+      </ol>
 
-      <div className="mb-8">
-
-        <Link
-          to="/cart"
-          className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
-        >
-          <ArrowLeft size={17} />
-
-          Back to Cart
-        </Link>
-
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          Checkout
-        </h1>
-
-        <p className="mt-2 text-slate-500">
-          Review your address and order before placing it.
-        </p>
-
+      <div className="mt-6 space-y-3">
+        {error && <Alert>{error}</Alert>}
+        {blocked.length > 0 && (
+          <Alert>Some items are no longer available in the quantity you chose: <strong>{blocked.map((i) => i.productName).join(", ")}</strong>. <Link to="/cart" className="font-semibold underline">Update your cart</Link></Alert>
+        )}
       </div>
 
-      {/* ===================================================
-          ERROR
-      =================================================== */}
-
-      {error && (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      {/* ===================================================
-          MAIN GRID
-      =================================================== */}
-
-      <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
-
-        {/* =================================================
-            LEFT SIDE
-        ================================================= */}
-
-        <div className="space-y-8">
-
-          {/* ===============================================
-              SHIPPING ADDRESS
-          =============================================== */}
-
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-            {/* Header */}
-
-            <div className="mb-6 flex items-start gap-3">
-
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-
-                <MapPin
-                  size={20}
-                  className="text-slate-600"
-                />
-
-              </div>
-
-              <div>
-
-                <h2 className="text-lg font-semibold text-slate-900">
-                  Shipping Address
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Select where you want your order delivered.
-                </p>
-
-              </div>
-
-            </div>
-
-            {/* Loading addresses */}
-
-            {loadingAddresses ? (
-              <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-500">
-
-                <Loader2
-                  size={20}
-                  className="animate-spin"
-                />
-
-                Loading addresses...
-
-              </div>
-            ) : addresses.length === 0 ? (
-
-              /* =========================================
-                 NO ADDRESSES
-              ========================================= */
-
-              <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center">
-
-                <MapPin
-                  size={32}
-                  className="mx-auto text-slate-400"
-                />
-
-                <h3 className="mt-3 font-semibold text-slate-900">
-                  No saved addresses
-                </h3>
-
-                <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">
-                  You need to add a shipping address before you can place an order.
-                </p>
-
-                <Link
-                  to="/addresses"
-                  className="mt-5 inline-flex rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-                >
-                  Add Address
-                </Link>
-
-              </div>
-
-            ) : (
-
-              /* =========================================
-                 ADDRESS LIST
-              ========================================= */
-
-              <div className="space-y-3">
-
-                {addresses.map(
-                  (address) => {
-
-                    const isSelected =
-                      selectedAddressId ===
-                      address.id;
-
-                    return (
-                      <label
-                        key={address.id}
-                        className={`block cursor-pointer rounded-xl border p-4 transition ${
-                          isSelected
-                            ? "border-slate-900 bg-slate-50 ring-1 ring-slate-900"
-                            : "border-slate-200 hover:border-slate-400"
-                        }`}
-                      >
-
-                        <div className="flex gap-3">
-
-                          {/* Radio */}
-
-                          <input
-                            type="radio"
-                            name="shippingAddress"
-                            value={address.id}
-                            checked={
-                              isSelected
-                            }
-                            onChange={() => {
-                              setSelectedAddressId(
-                                address.id
-                              );
-
-                              setError("");
-                            }}
-                            className="mt-1 h-4 w-4 accent-slate-900"
-                          />
-
-                          {/* Address information */}
-
-                          <div className="min-w-0 flex-1">
-
-                            <div className="flex flex-wrap items-center gap-2">
-
-                              <p className="font-semibold text-slate-900">
-                                {
-                                  address.recipientName
-                                }
-                              </p>
-
-                              {address.isDefault && (
-                                <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                                  Default
-                                </span>
-                              )}
-
-                            </div>
-
-                            <p className="mt-1 text-sm text-slate-600">
-                              {address.phone}
-                            </p>
-
-                            <div className="mt-2 space-y-0.5">
-
-                              <p className="text-sm text-slate-600">
-                                {address.line1}
-                              </p>
-
-                              {address.line2 && (
-                                <p className="text-sm text-slate-600">
-                                  {
-                                    address.line2
-                                  }
-                                </p>
-                              )}
-
-                              <p className="text-sm text-slate-600">
-
-                                {address.city}
-
-                                {address.state &&
-                                  `, ${address.state}`}
-
-                                {address.postalCode &&
-                                  ` ${address.postalCode}`}
-
-                              </p>
-
-                              <p className="text-sm text-slate-600">
-                                {address.country}
-                              </p>
-
-                            </div>
-
-                          </div>
-
-                        </div>
-
-                      </label>
-                    );
-                  }
-                )}
-
-                {/* Add another address */}
-
-                <div className="pt-2">
-
-                  <Link
-                    to="/addresses"
-                    className="inline-flex items-center text-sm font-semibold text-slate-700 transition hover:text-slate-950"
-                  >
-                    + Add another address
-                  </Link>
-
+      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_360px]">
+        <div className="space-y-6">
+          {step === "details" ? (
+            <>
+              <section className={`${card} p-6`}>
+                <div className="flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900"><MapPin size={19} /> Delivery address</h2>
+                  <Link to="/addresses" className="text-sm font-semibold text-slate-700 hover:text-slate-950">Manage addresses</Link>
                 </div>
-
-              </div>
-            )}
-
-          </section>
-
-          {/* ===============================================
-              ORDER ITEMS
-          =============================================== */}
-
-          <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-
-            {/* Header */}
-
-            <div className="border-b border-slate-200 px-5 py-4 sm:px-6">
-
-              <h2 className="font-semibold text-slate-900">
-                Order Items
-              </h2>
-
-              <p className="mt-1 text-sm text-slate-500">
-                {cart.items.length}{" "}
-                {cart.items.length === 1
-                  ? "product"
-                  : "products"}
-              </p>
-
-            </div>
-
-            {/* Items */}
-
-            <div className="divide-y divide-slate-200">
-
-              {cart.items.map(
-                (item) => (
-                  <div
-                    key={item.productId}
-                    className="flex gap-4 p-5 sm:p-6"
-                  >
-
-                    {/* Product image */}
-
-                    <Link
-                      to={`/products/${item.productId}`}
-                      className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100"
-                    >
-
-                      {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt={
-                            item.productName
-                          }
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-
-                          <ShoppingBag
-                            size={24}
-                            className="text-slate-300"
-                          />
-
-                        </div>
-                      )}
-
-                    </Link>
-
-                    {/* Product information */}
-
-                    <div className="min-w-0 flex-1">
-
-                      <Link
-                        to={`/products/${item.productId}`}
-                        className="font-semibold text-slate-900 transition hover:text-slate-600"
-                      >
-                        {
-                          item.productName
-                        }
-                      </Link>
-
-                      <p className="mt-1 text-sm text-slate-500">
-                        $
-                        {item.unitPrice.toFixed(
-                          2
-                        )}
-
-                        {" "}×{" "}
-
-                        {item.quantity}
-                      </p>
-
-                      <p className="mt-1 text-xs text-slate-400">
-                        Available stock:{" "}
-                        {
-                          item.availableStock
-                        }
-                      </p>
-
-                    </div>
-
-                    {/* Line total */}
-
-                    <div className="shrink-0 text-right">
-
-                      <p className="font-semibold text-slate-900">
-                        $
-                        {item.lineTotal.toFixed(
-                          2
-                        )}
-                      </p>
-
-                    </div>
-
+                {addresses.length === 0 ? (
+                  <div className="mt-4 rounded-xl border border-dashed border-slate-300 p-6 text-center">
+                    <p className="text-sm text-slate-500">You have no saved address yet.</p>
+                    <Link to="/addresses" className={`${btnPrimary} mt-4`}>Add an address</Link>
                   </div>
-                )
-              )}
+                ) : (
+                  <div className="mt-4 space-y-3" role="radiogroup" aria-label="Delivery address">
+                    {addresses.map((a) => (
+                      <label key={a.id} className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition ${a.id === addressId ? "border-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-400"}`}>
+                        <input type="radio" name="address" checked={a.id === addressId} onChange={() => setAddressId(a.id)} className="mt-1 accent-slate-900" />
+                        <div className="flex-1">
+                          <AddressText a={a} />
+                          {a.isDefault && <span className="mt-2 inline-block rounded-full bg-slate-900 px-2 py-0.5 text-xs font-medium text-white">Default</span>}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </section>
 
-            </div>
+              <fieldset className={`${card} p-6`}>
+                <legend className="sr-only">Payment method</legend>
+                <h2 className="text-lg font-semibold text-slate-900">Payment method</h2>
+                <div className="mt-4 space-y-3">
+                  {PAYMENT_OPTIONS.map((o) => (
+                    <label key={o.value} className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition ${payment === o.value ? "border-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-400"}`}>
+                      <input type="radio" name="payment" checked={payment === o.value} onChange={() => setPayment(o.value)} className="mt-1 accent-slate-900" />
+                      <span><span className="block font-medium text-slate-900">{o.title}</span><span className="block text-sm text-slate-500">{o.hint}</span></span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
 
-          </section>
+              <button className={`${btnPrimary} w-full py-3.5 sm:w-auto`} disabled={!address || blocked.length > 0} onClick={() => { setError(""); setStep("review"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                Continue to review
+              </button>
+              {!address && addresses.length > 0 && <p className="text-xs text-amber-600">Select a delivery address to continue.</p>}
+            </>
+          ) : (
+            <>
+              <section className={`${card} p-6`}>
+                <div className="flex items-start justify-between gap-4">
+                  <div><h2 className="font-semibold text-slate-900">Deliver to</h2><div className="mt-3">{address && <AddressText a={address} />}</div></div>
+                  <button className="text-sm font-semibold text-slate-700 underline" onClick={() => setStep("details")}>Change</button>
+                </div>
+              </section>
 
+              <section className={`${card} p-6`}>
+                <div className="flex items-start justify-between gap-4">
+                  <div><h2 className="font-semibold text-slate-900">Payment</h2><p className="mt-3 text-sm text-slate-600"><span className="font-medium text-slate-900">{method.title}</span><br />{method.hint}</p></div>
+                  <button className="text-sm font-semibold text-slate-700 underline" onClick={() => setStep("details")}>Change</button>
+                </div>
+              </section>
+
+              <section className={card}>
+                <h2 className="border-b border-slate-200 px-6 py-4 font-semibold text-slate-900">Items ({units})</h2>
+                <ul className="divide-y divide-slate-200">
+                  {cart.items.map((i) => (
+                    <li key={i.productId} className="flex items-center gap-4 px-6 py-4">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                        {i.imageUrl ? <img src={i.imageUrl} alt="" className="h-full w-full object-cover" /> : <Package size={22} className="text-slate-300" />}
+                      </div>
+                      <div className="min-w-0 flex-1"><p className="truncate font-medium text-slate-900">{i.productName}</p><p className="text-sm text-slate-500">{money(i.unitPrice)} × {i.quantity}</p></div>
+                      <span className="font-semibold text-slate-900">{money(i.lineTotal)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <div className="flex flex-wrap gap-3">
+                <button className={btnSecondary} onClick={() => setStep("details")} disabled={placing}><ArrowLeft size={16} /> Back</button>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* =================================================
-            RIGHT SIDE
-        ================================================= */}
+        <aside className="h-fit lg:sticky lg:top-24">
+          <div className={`${card} p-6`}>
+            <h2 className="text-lg font-semibold text-slate-900">Order summary</h2>
+            <dl className="mt-5 space-y-3 text-sm">
+              <div className="flex justify-between"><dt className="text-slate-500">Items ({units})</dt><dd className="font-medium">{money(cart.subtotal)}</dd></div>
+              <div className="flex justify-between"><dt className="text-slate-500">Shipping</dt><dd className="font-medium">Free</dd></div>
+              <div className="flex justify-between border-t border-slate-200 pt-3 text-base font-bold text-slate-900"><dt>Total</dt><dd className="text-2xl">{money(cart.subtotal)}</dd></div>
+            </dl>
 
-        <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-24">
-
-          <h2 className="text-lg font-semibold text-slate-900">
-            Order Summary
-          </h2>
-
-          <div className="mt-6 space-y-4">
-
-            {/* Subtotal */}
-
-            <div className="flex justify-between text-sm">
-
-              <span className="text-slate-500">
-                Subtotal
-              </span>
-
-              <span className="font-medium text-slate-900">
-                $
-                {cart.subtotal.toFixed(
-                  2
-                )}
-              </span>
-
-            </div>
-
-            {/* Shipping */}
-
-            <div className="flex justify-between text-sm">
-
-              <span className="text-slate-500">
-                Shipping
-              </span>
-
-              <span className="font-medium text-slate-900">
-                Free
-              </span>
-
-            </div>
-
-            {/* Divider */}
-
-            <div className="h-px bg-slate-200" />
-
-            {/* Total */}
-
-            <div className="flex items-center justify-between">
-
-              <span className="font-semibold text-slate-900">
-                Total
-              </span>
-
-              <span className="text-2xl font-bold text-slate-900">
-                $
-                {cart.subtotal.toFixed(
-                  2
-                )}
-              </span>
-
-            </div>
-
-          </div>
-
-          {/* =============================================
-              PLACE ORDER
-          ============================================= */}
-
-          <button
-            type="button"
-            disabled={
-              placingOrder ||
-              selectedAddressId === null ||
-              addresses.length === 0
-            }
-            onClick={
-              handlePlaceOrder
-            }
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-
-            {placingOrder ? (
+            {step === "review" ? (
               <>
-                <Loader2
-                  size={18}
-                  className="animate-spin"
-                />
-
-                Placing Order...
+                <button className={`${btnPrimary} mt-6 w-full py-3.5`} disabled={placing || !address || blocked.length > 0} onClick={placeOrder}>
+                  {placing ? <><Loader2 size={18} className="animate-spin" /> Placing order...</> : <><CheckCircle2 size={18} /> Place order · {money(cart.subtotal)}</>}
+                </button>
+                <p className="mt-4 text-center text-xs leading-5 text-slate-400">By placing this order you confirm the items, quantities and address above are correct.</p>
               </>
             ) : (
-              <>
-                <CheckCircle2
-                  size={18}
-                />
-
-                Place Order
-              </>
+              <p className="mt-5 text-xs leading-5 text-slate-400">You'll review everything before the order is placed.</p>
             )}
-
-          </button>
-
-          {/* Address warning */}
-
-          {selectedAddressId ===
-            null &&
-            addresses.length > 0 && (
-              <p className="mt-3 text-center text-xs leading-5 text-amber-600">
-                Please select a shipping address.
-              </p>
-            )}
-
-          {/* No address warning */}
-
-          {addresses.length === 0 && (
-            <p className="mt-3 text-center text-xs leading-5 text-amber-600">
-              Add a shipping address before placing your order.
-            </p>
-          )}
-
-          <p className="mt-4 text-center text-xs leading-5 text-slate-400">
-            By placing this order, you confirm that
-            the items and quantities above are correct.
-          </p>
-
+          </div>
         </aside>
-
       </div>
-
     </div>
   );
 }

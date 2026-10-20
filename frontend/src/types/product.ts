@@ -1,29 +1,49 @@
+export interface ProductList {
+  id: number;
+  name: string;
+  price: number;
+  stockQuantity: number;
+  isActive: boolean;
+  categoryId: number;
+  categoryName: string;
+  primaryImageUrl: string | null;
+}
+
+export interface ProductImage {
+  id: number;
+  url: string;
+  isPrimary: boolean;
+  sortOrder: number;
+}
+
 export interface Product {
   id: number;
   name: string;
   description: string | null;
   price: number;
-  stock: number;
+  stockQuantity: number;
   categoryId: number;
-  categoryName?: string | null;
-  imageUrl?: string | null;
-  images?: string[];
+  categoryName: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  images: ProductImage[];
 }
 
 export interface ProductListParams {
   pageNumber?: number;
   pageSize?: number;
   search?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  sortBy?: string;
-  descending?: boolean;
+  categoryId?: number;
+  isActive?: boolean; // only honoured for admins
+  sortBy?: "id" | "name" | "price" | "stockQuantity";
+  sortDirection?: "asc" | "desc";
 }
 
-export interface ProductListResponse {
-  items: Product[];
-  pageNumber: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages: number;
+export interface ProductPayload {
+  name: string;
+  description: string;
+  price: number;
+  stockQuantity: number;
+  categoryId: number;
 }

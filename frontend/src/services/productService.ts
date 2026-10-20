@@ -1,58 +1,23 @@
 import { api } from "./api";
+import type { PagedResult } from "../types/common";
+import type { Product, ProductList, ProductListParams } from "../types/product";
 
-import type {
-  Product,
-  ProductListParams,
-  ProductListResponse,
-} from "../types/product";
-
-const getProducts = async (
-  params: ProductListParams = {}
-): Promise<ProductListResponse> => {
-  const response =
-    await api.get<ProductListResponse>(
-      "/products",
-      {
-        params: {
-          pageNumber:
-            params.pageNumber ?? 1,
-
-          pageSize:
-            params.pageSize ?? 12,
-
-          search:
-            params.search || undefined,
-
-          minPrice:
-            params.minPrice,
-
-          maxPrice:
-            params.maxPrice,
-
-          sortBy:
-            params.sortBy,
-
-          descending:
-            params.descending,
-        },
-      }
-    );
-
-  return response.data;
+const getProducts = async (params: ProductListParams = {}): Promise<PagedResult<ProductList>> => {
+  const { data } = await api.get<PagedResult<ProductList>>("/products", {
+    params: {
+      pageNumber: params.pageNumber ?? 1,
+      pageSize: params.pageSize ?? 12,
+      search: params.search || undefined,
+      categoryId: params.categoryId,
+      isActive: params.isActive,
+      sortBy: params.sortBy,
+      sortDirection: params.sortDirection,
+    },
+  });
+  return data;
 };
 
-const getProductById = async (
-  id: number
-): Promise<Product> => {
-  const response =
-    await api.get<Product>(
-      `/products/${id}`
-    );
+const getProductById = async (id: number): Promise<Product> =>
+  (await api.get<Product>(`/products/${id}`)).data;
 
-  return response.data;
-};
-
-export const productService = {
-  getProducts,
-  getProductById,
-};
+export const productService = { getProducts, getProductById };

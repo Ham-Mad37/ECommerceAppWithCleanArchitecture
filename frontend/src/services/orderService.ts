@@ -1,42 +1,15 @@
 import { api } from "./api";
-
-export interface CreateOrderRequest {
-  addressId: number;
-}
-
-const createOrder = async (
-  addressId: number
-): Promise<number> => {
-  const response = await api.post<number>(
-    "/orders",
-    {
-      addressId,
-    }
-  );
-
-  return response.data;
-};
-
-const getMyOrders = async () => {
-  const response = await api.get(
-    "/orders"
-  );
-
-  return response.data;
-};
-
-const getOrderById = async (
-  id: number
-) => {
-  const response = await api.get(
-    `/orders/${id}`
-  );
-
-  return response.data;
-};
+import type { Order, PaymentMethod } from "../types/order";
 
 export const orderService = {
-  createOrder,
-  getMyOrders,
-  getOrderById,
+  // API answers { orderId } - the old code treated the body as a number.
+  createOrder: async (addressId: number, paymentMethod: PaymentMethod): Promise<number> => {
+    const { data } = await api.post<{ orderId: number }>("/orders", { addressId, paymentMethod });
+    return data.orderId;
+  },
+  getMyOrders: async (): Promise<Order[]> => (await api.get<Order[]>("/orders")).data,
+  getOrderById: async (id: number): Promise<Order> => (await api.get<Order>(`/orders/${id}`)).data,
+  cancel: async (id: number): Promise<void> => {
+    await api.put(`/orders/${id}/cancel`);
+  },
 };

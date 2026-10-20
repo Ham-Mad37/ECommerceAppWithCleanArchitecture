@@ -11,7 +11,7 @@ export interface Address {
   isDefault: boolean;
 }
 
-export interface CreateAddressRequest {
+export interface AddressPayload {
   recipientName: string;
   phone: string;
   line1: string;
@@ -22,6 +22,6 @@ export interface CreateAddressRequest {
   country: string;
 }
 
-export interface UpdateAddressRequest extends CreateAddressRequest {
-  id: number;
+export interface CreateAddressRequest extends AddressPayload {
+  makeDefault?: boolean;
 }

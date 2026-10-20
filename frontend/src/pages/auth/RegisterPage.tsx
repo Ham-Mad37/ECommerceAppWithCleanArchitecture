@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
+import { getApiError } from "../../utils/format";
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -75,9 +76,16 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password.length < 6) {
+    // Same rules as ASP.NET Identity in Infrastructure/DependencyInjection.cs
+    if (
+      password.length < 8 ||
+      !/[a-z]/.test(password) ||
+      !/[A-Z]/.test(password) ||
+      !/[0-9]/.test(password) ||
+      !/[^A-Za-z0-9]/.test(password)
+    ) {
       setError(
-        "Password must be at least 6 characters."
+        "Password needs 8+ characters with an uppercase letter, a lowercase letter, a number and a symbol."
       );
       return;
     }
@@ -110,14 +118,10 @@ export default function RegisterPage() {
         },
       });
     } catch (error: any) {
-      const responseData =
-        error?.response?.data;
-
-      const message =
-        responseData?.detail ??
-        responseData?.message ??
-        responseData?.title ??
-        "Registration failed. Please try again.";
+      const message = getApiError(
+        error,
+        "Registration failed. Please try again."
+      );
 
       setError(message);
     } finally {

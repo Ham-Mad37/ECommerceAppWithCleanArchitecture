@@ -6,17 +6,4 @@ export interface Category {
   updatedAt?: string;
 }
 
-export interface CategoryList {
-  id: number;
-  name: string;
-  isActive: boolean;
-}
-
-export interface CreateCategoryRequest {
-  name: string;
-}
-
-export interface UpdateCategoryRequest {
-  id: number;
-  name: string;
-}
+export type CategoryList = Pick<Category, "id" | "name" | "isActive">;
