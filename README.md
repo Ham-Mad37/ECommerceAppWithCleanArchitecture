@@ -209,11 +209,6 @@ Register a customer from the **Register** page, or sign in with the seeded admin
 | `Storage:PublicBaseUrl` | Optional public base URL for image links. |
 
 
-```bash
-export Jwt__Key="<a-long-random-secret>"
-export ConnectionStrings__DefaultConnection="Server=...;Database=...;..."
-```
-
 ### Front-end (`frontend/.env`)
 
 | Variable | Default | Purpose |
